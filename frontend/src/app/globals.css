@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #F5EFE6;       /* Açık tema - Sıcak açık bej */
+  --foreground: #4A403A;       /* Açık tema - Koyu kahverengi (metin) */
+  --primary-accent: #8C6A56;   /* Açık tema - Orta sıcak kahve (vurgu) */
+  --secondary-accent: #E8DFCA; /* Açık tema - Komplementer bej (kart vb.) */
+
+  /* Mevcut fontu koruyalım, isterseniz değiştirebiliriz */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #3E362F;       /* Koyu tema - Koyu sıcak kahve/gri */
+    --foreground: #EAE0D6;       /* Koyu tema - Açık bej (metin) */
+    --primary-accent: #B08D74;   /* Koyu tema - Açık sıcak kahve (vurgu) */
+    --secondary-accent: #5A504A; /* Koyu tema - Komplementer koyu bej (kart vb.) */
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; /* Biraz daha modern bir sans-serif font */
+  /* Geçiş efektleri için */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Linkler için genel stil */
+a {
+  color: var(--primary-accent);
+  transition: color 0.2s ease-in-out;
+}
+a:hover {
+  filter: brightness(1.1); /* Vurgu rengini biraz parlat */
+}
+
+/* Butonlar için temel bir stil (Tailwind ile üzerine yazılabilir) */
+.btn-primary {
+  background-color: var(--primary-accent);
+  color: var(--background); /* Kontrast için arka plan rengi */
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem; /* rounded-md */
+  font-weight: 500; /* medium */
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+.btn-primary:hover {
+  filter: brightness(0.9);
+}
