@@ -3,49 +3,325 @@
 @tailwind utilities;
 
 :root {
-  --background: #F5EFE6;       /* Açık tema - Sıcak açık bej */
-  --foreground: #4A403A;       /* Açık tema - Koyu kahverengi (metin) */
-  --primary-accent: #8C6A56;   /* Açık tema - Orta sıcak kahve (vurgu) */
-  --secondary-accent: #E8DFCA; /* Açık tema - Komplementer bej (kart vb.) */
-
-  /* Mevcut fontu koruyalım, isterseniz değiştirebiliriz */
+  /* Açık Doğa Teması - Light Nature Palette */
+  --background: #fefdf9;         /* Çok açık krem - doğal arka plan */
+  --foreground: #6b5b47;         /* Sıcak açık kahverengi - ana metin */
+  --primary-accent: #a8c89a;     /* Açık sage yeşili - ana vurgu */
+  --secondary-accent: #f5f2ed;   /* Çok açık bej - kartlar */
+  --tertiary-accent: #c4d6b8;    /* Açık mint yeşili - ikincil vurgu */
+  --water-blue: #87ceeb;         /* Açık gök mavisi - sula butonu için */
+  --earth-brown: #d2b48c;        /* Açık tan kahverengisi */
+  --sun-yellow: #ffe4b5;         /* Açık moccasin sarısı */
+  --grow-green: #90ee90;         /* Açık yeşil - evrimleş butonu */
+  --sell-orange: #ffa07a;        /* Açık somon turuncusu - sat butonu */
+  --danger-red: #f4a6a6;         /* Açık mercan kırmızısı */
+  --success-green: #98d8a4;      /* Açık mint yeşili */
+  --card-bg: #ffffff;            /* Temiz beyaz kartlar */
+  --card-hover: #f9f6f1;         /* Çok açık warm beige hover */
+  --text-muted: #9b8a72;         /* Açık bej-kahverengi */
+  --border-color: #e8dcc6;       /* Açık tan kenar */
+  --shadow-light: rgba(168, 200, 154, 0.12);
+  --shadow-medium: rgba(168, 200, 154, 0.18);
+  --navbar-bg: #a8c89a;          /* Açık sage yeşili navbar */
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #3E362F;       /* Koyu tema - Koyu sıcak kahve/gri */
-    --foreground: #EAE0D6;       /* Koyu tema - Açık bej (metin) */
-    --primary-accent: #B08D74;   /* Koyu tema - Açık sıcak kahve (vurgu) */
-    --secondary-accent: #5A504A; /* Koyu tema - Komplementer koyu bej (kart vb.) */
+    /* Koyu Doğa Teması */
+    --background: #1a2f1a;         /* Koyu orman yeşili */
+    --foreground: #e8f5e8;         /* Açık mint */
+    --primary-accent: #7fb069;     /* Açık yeşil */
+    --secondary-accent: #2d4a2b;   /* Koyu yeşil kartlar */
+    --tertiary-accent: #52b788;    /* Parlak yeşil */
+    --water-blue: #5ba3f5;         /* Parlak su mavisi */
+    --earth-brown: #a0714f;        /* Açık toprak */
+    --sun-yellow: #ffd23f;         /* Parlak sarı */
+    --grow-green: #6bcf7f;         /* Parlak büyüme yeşili */
+    --sell-orange: #ff8f1a;        /* Parlak turuncu */
+    --danger-red: #ff4757;         /* Parlak kırmızı */
+    --success-green: #6bcf7f;      /* Parlak başarı yeşili */
+    --card-bg: #2d4a2b;            /* Koyu yeşil kartlar */
+    --card-hover: #4a7c59;         /* Orta yeşil hover */
+    --text-muted: #a8b8a8;         /* Açık gri-yeşil */
+    --border-color: #4a7c59;       /* Orta yeşil kenar */
+    --shadow-light: rgba(246, 246, 246, 0.2);
+    --shadow-medium: rgba(127, 176, 105, 0.3);
+    --navbar-bg: #f9cc6b;          /* Koyu orman yeşili navbar */
   }
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; /* Biraz daha modern bir sans-serif font */
-  /* Geçiş efektleri için */
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
+  line-height: 1.6;
 }
 
-/* Linkler için genel stil */
+/* Modern kart stilleri */
+.modern-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 4px 6px var(--shadow-light);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.modern-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px var(--shadow-medium);
+  background: var(--card-hover);
+}
+
+/* NFT kart özel stilleri */
+.nft-card-compact {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px var(--shadow-light);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  overflow: hidden;
+  width: 100%;
+  max-width: 220px;
+  min-height: 260px;
+}
+
+.nft-card-compact:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 16px var(--shadow-medium);
+  background: var(--card-hover);
+}
+
+/* İşlevsel buton stilleri */
+.btn-water {
+  background: linear-gradient(135deg, var(--water-blue), #70c4eb);
+  color: #4a5a6a;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(135, 206, 235, 0.25);
+}
+
+.btn-water:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(135, 206, 235, 0.35);
+  background: linear-gradient(135deg, #70c4eb, var(--water-blue));
+}
+
+.btn-evolve {
+  background: linear-gradient(135deg, var(--grow-green), #a6f3a6);
+  color: #4a6a4a;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(144, 238, 144, 0.25);
+}
+
+.btn-evolve:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(144, 238, 144, 0.35);
+  background: linear-gradient(135deg, #a6f3a6, var(--grow-green));
+}
+
+.btn-sell {
+  background: linear-gradient(135deg, var(--sell-orange), #ffb399);
+  color: #6a4a3a;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(255, 160, 122, 0.25);
+}
+
+.btn-sell:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 160, 122, 0.35);
+  background: linear-gradient(135deg, #ffb399, var(--sell-orange));
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-accent), var(--tertiary-accent));
+  color: #4a5a4a;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px var(--shadow-light);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--shadow-medium);
+  background: linear-gradient(135deg, var(--tertiary-accent), var(--primary-accent));
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, var(--earth-brown), #e6d3b7);
+  color: #6a5a47;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, #e6d3b7, var(--earth-brown));
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, var(--danger-red), #f7c6c6);
+  color: #6a4a4a;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-danger:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, #f7c6c6, var(--danger-red));
+}
+
+.btn-success {
+  background: linear-gradient(135deg, var(--success-green), #b8e6c1);
+  color: #4a6a4a;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-success:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, #b8e6c1, var(--success-green));
+}
+
+/* Modal backdrop - Doğa teması */
+.modal-backdrop {
+  background: rgba(45, 74, 43, 0.8);
+  backdrop-filter: blur(12px);
+}
+
+/* Linkler için doğal stil */
 a {
   color: var(--primary-accent);
   transition: color 0.2s ease-in-out;
 }
 a:hover {
-  filter: brightness(1.1); /* Vurgu rengini biraz parlat */
+  color: var(--tertiary-accent);
 }
 
-/* Butonlar için temel bir stil (Tailwind ile üzerine yazılabilir) */
-.btn-primary {
-  background-color: var(--primary-accent);
-  color: var(--background); /* Kontrast için arka plan rengi */
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem; /* rounded-md */
-  font-weight: 500; /* medium */
-  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+/* Range Slider Doğa Teması */
+.range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  outline: none;
 }
-.btn-primary:hover {
-  filter: brightness(0.9);
+
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary-accent);
+  cursor: pointer;
+  border: 2px solid var(--background);
+  box-shadow: 0 2px 4px var(--shadow-light);
+  transition: all 0.2s ease;
+}
+
+.range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px var(--shadow-medium);
+  background: var(--tertiary-accent);
+}
+
+.range-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary-accent);
+  cursor: pointer;
+  border: 2px solid var(--background);
+  box-shadow: 0 2px 4px var(--shadow-light);
+  transition: all 0.2s ease;
+}
+
+.range-slider::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px var(--shadow-medium);
+  background: var(--tertiary-accent);
+}
+
+.range-slider::-webkit-slider-track {
+  background: transparent;
+}
+
+.range-slider::-moz-range-track {
+  background: transparent;
+}
+
+/* Status badge stilleri */
+.status-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-for-sale {
+  background: linear-gradient(135deg, var(--sell-orange), #e85d00);
+  color: white;
+}
+
+.status-owned {
+  background: linear-gradient(135deg, var(--success-green), #40916c);
+  color: white;
+}
+
+.status-nft {
+  background: linear-gradient(135deg, var(--primary-accent), var(--tertiary-accent));
+  color: white;
+}
+
+/* Responsive grid improvements */
+.nft-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  padding: 1rem;
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Loading animation with nature colors */
+.loading-spinner {
+  border: 3px solid var(--border-color);
+  border-top: 3px solid var(--primary-accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }

@@ -3,12 +3,13 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
+// import "@openzeppelin/contracts/utils/Counters.sol"; // Deprecated - removing
 // import "@openzeppelin/contracts/utils/Strings.sol"; // toString() için gerek kalmadı
 
 contract EvolvingNFT is ERC721URIStorage, Ownable {
-    using Counters for Counters.Counter;
-    Counters.Counter private _tokenIdCounter;
+    // using Counters for Counters.Counter; // Deprecated - removing
+    // Counters.Counter private _tokenIdCounter; // Deprecated - removing
+    uint256 private _tokenIdCounter; // Simple counter instead
 
     enum NFTStage { Seed, Sprout, Sapling, Bloom, Fruiting } // 0, 1, 2, 3, 4
 
@@ -23,7 +24,7 @@ contract EvolvingNFT is ERC721URIStorage, Ownable {
 
     mapping(uint256 => NFTData) private _nftData;
 
-    uint256 public constant WATERING_COOLDOWN = 1 days; // Günde 1 sulama (test için kısa tutulabilir, örn: 60 seconds)
+    uint256 public constant WATERING_COOLDOWN = 0; // Test için bekleme süresi kaldırıldı
 
     event Watered(uint256 indexed tokenId, uint256 newWateringCount, NFTStage currentStage);
     event Evolved(uint256 indexed tokenId, NFTStage newStage, string newURI);
@@ -33,8 +34,10 @@ contract EvolvingNFT is ERC721URIStorage, Ownable {
     constructor(address initialOwner) ERC721("Evolving NFT", "EVOLVE") Ownable(initialOwner) {}
 
     function mintNFT(address recipient, string memory initialSeedURI) public onlyOwner returns (uint256) {
-        _tokenIdCounter.increment();
-        uint256 newTokenId = _tokenIdCounter.current();
+        // _tokenIdCounter.increment(); // Deprecated - replacing
+        _tokenIdCounter++; // Simple increment
+        // uint256 newTokenId = _tokenIdCounter.current(); // Deprecated - replacing
+        uint256 newTokenId = _tokenIdCounter; // Use simple counter
         _safeMint(recipient, newTokenId);
 
         NFTData storage nft = _nftData[newTokenId];
@@ -60,7 +63,7 @@ contract EvolvingNFT is ERC721URIStorage, Ownable {
         string memory newStageTokenURI,
         uint256 evolutionThreshold // Bu AŞAMADAN bir sonrakine geçmek için gereken sulama
     ) public onlyOwner {
-        require(_exists(tokenId), "EvolvingNFT: Token does not exist");
+        require(_ownerOf(tokenId) != address(0), "EvolvingNFT: Token does not exist");
         require(uint8(stage) <= uint8(NFTStage.Fruiting), "EvolvingNFT: Invalid stage");
 
         NFTData storage nft = _nftData[tokenId];
@@ -86,7 +89,7 @@ contract EvolvingNFT is ERC721URIStorage, Ownable {
         require(uint8(stage) <= uint8(NFTStage.Fruiting), "EvolvingNFT: Invalid stage");
         for (uint i = 0; i < tokenIds.length; i++) {
             uint256 tokenId = tokenIds[i];
-            if (_exists(tokenId)) {
+            if (_ownerOf(tokenId) != address(0)) {
                 NFTData storage nft = _nftData[tokenId];
                 nft.stageTokenURIs[uint8(stage)] = newStageTokenURI;
                 if (stage != NFTStage.Fruiting) {
@@ -141,7 +144,7 @@ contract EvolvingNFT is ERC721URIStorage, Ownable {
         string memory currentStageTokenURI,
         bool canEvolve
     ) {
-        require(_exists(tokenId), "EvolvingNFT: Token does not exist");
+        require(_ownerOf(tokenId) != address(0), "EvolvingNFT: Token does not exist");
         NFTData storage nft = _nftData[tokenId];
         currentStage = nft.currentStage;
         wateringCount = nft.wateringCount;
@@ -156,11 +159,16 @@ contract EvolvingNFT is ERC721URIStorage, Ownable {
     }
     
     function getStageURI(uint256 tokenId, NFTStage stage) public view returns (string memory) {
-        require(_exists(tokenId), "EvolvingNFT: Token does not exist");
+        require(_ownerOf(tokenId) != address(0), "EvolvingNFT: Token does not exist");
         return _nftData[tokenId].stageTokenURIs[uint8(stage)];
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721URIStorage, IERC721) returns (bool) {
+    // Total supply fonksiyonu - mint edilen toplam NFT sayısı
+    function totalSupply() public view returns (uint256) {
+        return _tokenIdCounter;
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721URIStorage) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 } 

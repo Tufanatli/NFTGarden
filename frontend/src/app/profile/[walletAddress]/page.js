@@ -1,13 +1,16 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import classNames from 'classnames';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, Grid, Environment } from '@react-three/drei';
 import { web3Service } from '../../../utils/web3';
 import { getProfileByWallet, updateProfile, uploadProfileImage, getOrCreateProfile } from '../../../utils/profileService';
 import NFTCard from '../../../components/NFTCard';
+import IsometricGarden from '../../../components/3d/IsometricGarden';
 
 export default function ProfilePage() {
   const params = useParams();
@@ -58,7 +61,62 @@ export default function ProfilePage() {
       // Kullanıcının NFT'lerini yükle
       const nftsResult = await web3Service.getUserNFTs(address);
       if (nftsResult.success) {
-        setUserNFTs(nftsResult.nfts.filter(nft => nft.tokenURI)); // Sadece tokenURI olanlar
+        console.log('👤 User NFTs loaded:', nftsResult.nfts);
+        let userNftList = nftsResult.nfts.filter(nft => nft.tokenURI);
+        
+        // Test: Add sample NFTs with images if no NFTs exist
+        if (userNftList.length === 0 && isOwnProfile) {
+          console.log('🧪 Adding test NFTs for development...');
+          userNftList = [
+            {
+              tokenId: 'test-1',
+              contractAddress: 'test',
+              name: 'Test Sunflower',
+              description: 'A beautiful test sunflower',
+              image: 'https://images.unsplash.com/photo-1597848212624-e8bb4d8b8c00?w=300&h=300&fit=crop&crop=center',
+              tokenURI: 'test-uri-1',
+              owner: address,
+              details: {
+                currentStage: 0,
+                wateringCount: 2,
+                currentStageEvolutionThreshold: 3,
+                canEvolve: false
+              }
+            },
+            {
+              tokenId: 'test-2',
+              contractAddress: 'test',
+              name: 'Test Rose',
+              description: 'A lovely test rose',
+              image: 'https://images.unsplash.com/photo-1518895312237-a4e52b180dd4?w=300&h=300&fit=crop&crop=center',
+              tokenURI: 'test-uri-2',
+              owner: address,
+              details: {
+                currentStage: 2,
+                wateringCount: 7,
+                currentStageEvolutionThreshold: 7,
+                canEvolve: true
+              }
+            },
+            {
+              tokenId: 'test-3',
+              contractAddress: 'test',
+              name: 'Test Tulip',
+              description: 'A colorful test tulip',
+              image: 'https://images.unsplash.com/photo-1520637836862-4d197d17c35a?w=300&h=300&fit=crop&crop=center',
+              tokenURI: 'test-uri-3',
+              owner: address,
+              details: {
+                currentStage: 4,
+                wateringCount: 15,
+                currentStageEvolutionThreshold: 0,
+                canEvolve: false
+              }
+            }
+          ];
+        }
+        
+        setUserNFTs(userNftList);
       } else {
         console.error("Kullanıcının NFT'leri yüklenirken hata:", nftsResult.error);
         setUserNFTs([]);
@@ -336,7 +394,7 @@ export default function ProfilePage() {
                 ))}
             </div>
         ) : userNFTs.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4">
             {userNFTs.map(nft => (
               <NFTCard 
                 key={nft.tokenId || nft.id}
@@ -361,6 +419,137 @@ export default function ProfilePage() {
                 )}
             </div>
         )}
+      </div>
+
+      {/* 3D İzometrik Bahçe */}
+      <div className="mt-16">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-semibold text-foreground">
+              🎮 {isOwnProfile ? 'Senin 3D Bahçen' : `${displayUsernameText}'in 3D Bahçesi`}
+            </h2>
+            <p className="text-text-muted mt-1">
+              İzometrik görünümde bahçenizi keşfedin ve NFT'lerinizle etkileşim kurun
+            </p>
+          </div>
+          
+          {/* 3D Controls Info */}
+          <div className="bg-secondary-accent rounded-lg p-3 text-xs hidden md:block">
+            <div className="text-foreground font-medium mb-1">🎮 Kontroller:</div>
+            <div className="text-text-muted space-y-0.5">
+              <div>• Mouse: Döndür</div>
+              <div>• Scroll: Zoom</div>
+              <div>• Sağ tık: Kaydır</div>
+            </div>
+          </div>
+        </div>
+
+        {/* 3D Canvas Container */}
+        <div className="bg-card-bg rounded-2xl shadow-lg overflow-hidden border border-border-color">
+          <div className="h-[500px] md:h-[600px]">
+            <Canvas
+              camera={{
+                position: [8, 8, 8],
+                fov: 45,
+                near: 0.1,
+                far: 1000
+              }}
+              style={{ background: 'linear-gradient(to bottom, #87CEEB, #98FB98)' }}
+            >
+              {/* Enhanced Lighting for better visibility */}
+              <ambientLight intensity={0.8} color={0xffffff} />
+              <directionalLight
+                position={[10, 10, 5]}
+                intensity={1.2}
+                color={0xffffff}
+                castShadow
+                shadow-mapSize-width={1024}
+                shadow-mapSize-height={1024}
+              />
+              <directionalLight
+                position={[-5, 5, 5]}
+                intensity={0.5}
+                color={0xffffff}
+              />
+              <pointLight
+                position={[0, 10, 0]}
+                intensity={0.3}
+                color={0xffffff}
+              />
+
+              {/* Environment */}
+              <Environment preset="park" />
+
+              {/* Grid */}
+              <Grid
+                args={[16, 16]}
+                cellSize={1}
+                cellThickness={0.3}
+                cellColor="#8fbc8f"
+                sectionSize={4}
+                sectionThickness={0.8}
+                sectionColor="#228b22"
+                fadeDistance={25}
+                fadeStrength={1}
+                followCamera={false}
+                infiniteGrid={false}
+              />
+
+              {/* Main Garden Component */}
+              <Suspense fallback={null}>
+                <IsometricGarden 
+                  userNFTs={userNFTs} 
+                  onNFTClick={(nft) => {
+                    alert(`🌱 ${nft.name || `NFT #${nft.tokenId}`} tıklandı!\n\nDetaylar:\n• Token ID: ${nft.tokenId}\n• Stage: ${nft.details?.currentStage || 0}\n• Sulama: ${nft.details?.wateringCount || 0}\n\nBurada sulama ve evrim işlemleri yapılabilir.`);
+                  }}
+                />
+              </Suspense>
+
+              {/* Controls */}
+              <OrbitControls
+                enablePan={true}
+                enableZoom={true}
+                enableRotate={true}
+                maxPolarAngle={Math.PI / 2.2}
+                minDistance={4}
+                maxDistance={40}
+                target={[0, 0, 0]}
+              />
+            </Canvas>
+          </div>
+          
+          {/* Bottom Info Bar */}
+          <div className="bg-primary-accent/10 border-t border-border-color px-4 py-3">
+            <div className="flex items-center justify-between text-sm">
+              <div className="text-text-muted">
+                💡 3D Bahçe ile NFT'lerinizle etkileşimli deneyim yaşayın
+              </div>
+              
+              <div className="flex space-x-2">
+                <button className="btn-primary text-xs px-2 py-1 opacity-80 hover:opacity-100">
+                  🏠 Tam Ekran
+                </button>
+                <Link 
+                  href={`/garden/${profileWalletAddress}`}
+                  className="btn-secondary text-xs px-2 py-1 opacity-80 hover:opacity-100"
+                >
+                  📋 2D Görünüm
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Controls Info */}
+        <div className="mt-4 bg-secondary-accent rounded-lg p-3 text-sm md:hidden">
+          <div className="text-foreground font-medium mb-2">📱 Mobil Kontroller:</div>
+          <div className="text-text-muted grid grid-cols-2 gap-2">
+            <div>• Tek parmak: Döndür</div>
+            <div>• İki parmak: Zoom</div>
+            <div>• Pinch: Yakınlaştır</div>
+            <div>• Bitkilere dokunun</div>
+          </div>
+        </div>
       </div>
     </div>
   );

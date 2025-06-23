@@ -1,271 +1,592 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'next/navigation';
-import Image from 'next/image';
-import classNames from 'classnames';
+import { useState, useEffect, use } from 'react';
+import { ethers } from 'ethers';
 import { web3Service } from '../../../utils/web3';
-import { getProfileByWallet } from '../../../utils/profileService';
-import { getOrCreateGardenSettings, updateGardenPrivacy } from '../../../utils/gardenService';
-import NFTCard from '../../../components/NFTCard';
-import Link from 'next/link';
+import { EVOLVING_NFT_CONTRACT_ADDRESS, EVOLVING_NFT_ABI } from '../../../utils/constants';
+import Image from 'next/image';
 
-// Örnek Seed/Plant NFT verileri (normalde API'den veya kontrattan gelir)
-const sampleSeedNFTs = [
-  // { tokenId: '1', name: 'Ayçiçeği Tohumu', description: 'Güneşli günler için bir tohum.', tokenURI: 'ipfs://somehash1', seller: '0xOWNER', metadata: { name: 'Ayçiçeği Tohumu', description: 'Güneşli günler için bir tohum.', image: 'ipfs://QmZc3K5zZgY5PZQY5qZgY5PZQY5qZgY5PZQY5qZgY5PZQY5/sunflower_seed.png' } },
-  // { tokenId: '2', name: 'Gül Tohumu', description: 'Aşkın ve tutkunun sembolü.', tokenURI: 'ipfs://somehash2', seller: '0xOWNER', metadata: { name: 'Gül Tohumu', description: 'Aşkın ve tutkunun sembolü.', image: 'ipfs://QmZc3K5zZgY5PZQY5qZgY5PZQY5qZgY5PZQY5qZgY5PZQY5/rose_seed.png' } },
-];
-const samplePlantNFTs = [
-  // { tokenId: '101', name: 'Gelişmiş Ayçiçeği', description: 'Bahçenizin parlayan yıldızı.', tokenURI: 'ipfs://somehash101', seller: '0xOWNER', metadata: { name: 'Gelişmiş Ayçiçeği', description: 'Bahçenizin parlayan yıldızı.', image: 'ipfs://QmZc3K5zZgY5PZQY5qZgY5PZQY5qZgY5PZQY5qZgY5PZQY5/sunflower_plant.png' } },
-];
-
-export default function GardenPage() {
-  const params = useParams();
-  const gardenWalletAddress = params.walletAddress;
-
-  const [currentAccount, setCurrentAccount] = useState(null);
-  const [gardenOwnerProfile, setGardenOwnerProfile] = useState(null);
-  const [gardenSettings, setGardenSettings] = useState(null);
-  const [isOwnGarden, setIsOwnGarden] = useState(false);
+export default function GardenPage({ params }) {
+  const [account, setAccount] = useState(null);
+  const [gardenNFTs, setGardenNFTs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [savingPrivacy, setSavingPrivacy] = useState(false);
+  const [watering, setWatering] = useState({});
+  const [selectedNFT, setSelectedNFT] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [nftDetails, setNftDetails] = useState({});
+  const [evolving, setEvolving] = useState({});
 
-  const [seedNFTs, setSeedNFTs] = useState([]); // sampleSeedNFTs ile başlatılabilir
-  const [plantNFTs, setPlantNFTs] = useState([]); // samplePlantNFTs ile başlatılabilir
-  const [loadingNFTs, setLoadingNFTs] = useState(false);
+  const resolvedParams = use(params);
+  const walletAddress = resolvedParams?.walletAddress || '';
 
-  const setupWeb3 = useCallback(async () => {
-    const connection = await web3Service.checkConnection();
-    if (connection.connected) {
-      setCurrentAccount(connection.account.toLowerCase());
-    }
+  useEffect(() => {
+    checkConnection();
   }, []);
 
-  const loadGardenData = useCallback(async (address) => {
-    if (!address) return;
-    setLoading(true);
-    setLoadingNFTs(true);
+  useEffect(() => {
+    if (account) {
+      loadGardenNFTs();
+    }
+  }, [account]);
+
+  const checkConnection = async () => {
+    const result = await web3Service.checkConnection();
+    if (result.connected) {
+      setAccount(result.account);
+    }
+    setLoading(false);
+  };
+
+  const loadGardenNFTs = async () => {
     try {
-      const [profile, settings] = await Promise.all([
-        getProfileByWallet(address),
-        getOrCreateGardenSettings(address)
-      ]);
-
-      setGardenOwnerProfile(profile);
-      setGardenSettings(settings);
-
-      if (!settings) {
-        console.warn(`Bahçe ayarları yüklenemedi veya oluşturulamadı (muhtemelen profil yok): ${address}`);
-      }
+      // Load NFTs from localStorage (garden simulation)
+      const gardenData = JSON.parse(localStorage.getItem(`garden_${account}`) || '[]');
       
-      // TODO: Gerçek Seed ve Plant NFT'lerini yükle (web3Service veya Supabase üzerinden)
-      // Örnek verileri geçici olarak kullanabiliriz veya NFTCard'ları göstermek için boş bırakabiliriz.
-      const userNFTsResult = await web3Service.getUserNFTs(address); // Tüm NFT'leri al
-      if(userNFTsResult.success) {
-        // Burada SeedNFT ve PlantNFT contract adreslerine göre filtreleme yapılabilir.
-        // Şimdilik tümünü Seed gibi gösterelim, veya bir 'type' alanı ekleyelim metadata'ya.
-        // Bu örnek için gelen tüm NFT'leri Seed gibi listeliyoruz.
-        setSeedNFTs(userNFTsResult.nfts.filter(nft => nft.tokenURI)); // Sadece tokenURI olanları alalım
-        // setPlantNFTs([]); // Plant NFT'ler için ayrı bir yükleme/filtreleme mekanizması gerekli
-      } else {
-        console.error("Kullanıcının NFT'leri yüklenirken hata:", userNFTsResult.error);
-        setSeedNFTs(sampleSeedNFTs); // Hata durumunda örnek veri
-        setPlantNFTs(samplePlantNFTs);
-      }
-
-    } catch (error) {
-      console.error("Bahçe verileri yüklenirken hata:", error);
-      setSeedNFTs(sampleSeedNFTs); // Hata durumunda örnek veri
-      setPlantNFTs(samplePlantNFTs);
-    } finally {
-      setLoading(false);
-      setLoadingNFTs(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    setupWeb3();
-  }, [setupWeb3]);
-
-  useEffect(() => {
-    if (gardenWalletAddress) {
-      loadGardenData(gardenWalletAddress.toLowerCase());
-    }
-  }, [gardenWalletAddress, loadGardenData]);
-
-  useEffect(() => {
-    if (currentAccount && gardenWalletAddress) {
-      setIsOwnGarden(currentAccount === gardenWalletAddress.toLowerCase());
-    }
-  }, [currentAccount, gardenWalletAddress]);
-
-  const handlePrivacyChange = async (newIsPublic) => {
-    if (!isOwnGarden || !gardenSettings) return;
-    setSavingPrivacy(true);
-    try {
-      const updatedSettings = await updateGardenPrivacy(currentAccount, newIsPublic);
-      if (updatedSettings) {
-        setGardenSettings(updatedSettings);
-        alert(`Bahçe görünürlüğü ${newIsPublic ? 'Herkese Açık' : 'Özel'} olarak ayarlandı.`);
-      } else {
-        alert('Gizlilik ayarı güncellenirken bir hata oluştu.');
+      // Also load any EvolvingNFTs that the user owns directly
+      const userNFTs = await web3Service.getUserNFTs(account);
+      if (userNFTs.success) {
+        const evolvingNFTs = userNFTs.nfts.filter(nft => 
+          nft.contractAddress === EVOLVING_NFT_CONTRACT_ADDRESS ||
+          !nft.contractAddress // Default to EvolvingNFT if no contract specified
+        );
+        
+        // Combine garden NFTs with directly owned EvolvingNFTs
+        const allGardenNFTs = [...gardenData, ...evolvingNFTs];
+        
+        // Remove duplicates based on tokenId
+        const uniqueNFTs = allGardenNFTs.filter((nft, index, self) => 
+          index === self.findIndex(n => n.tokenId === nft.tokenId)
+        );
+        
+        setGardenNFTs(uniqueNFTs);
+        
+        // Load detailed information for each NFT
+        for (const nft of uniqueNFTs) {
+          await loadNFTDetails(nft.tokenId);
+        }
       }
     } catch (error) {
-      console.error("Bahçe gizliliği güncellenirken hata:", error);
-      alert('Gizlilik ayarı güncellenirken bir hata oluştu.');
-    } finally {
-      setSavingPrivacy(false);
+      console.error('Garden NFT loading error:', error);
     }
   };
-  
-  const displayUsername = gardenOwnerProfile?.username || (gardenWalletAddress ? `${gardenWalletAddress.slice(0, 6)}...${gardenWalletAddress.slice(-4)}` : 'Bilinmeyen Bahçıvan');
+
+  const loadNFTDetails = async (tokenId) => {
+    try {
+      const provider = new ethers.JsonRpcProvider('http://127.0.0.1:8545');
+      const contract = new ethers.Contract(EVOLVING_NFT_CONTRACT_ADDRESS, EVOLVING_NFT_ABI, provider);
+      
+      const nftData = await contract.getNFTDetails(tokenId);
+      const tokenURI = await contract.tokenURI(tokenId);
+      
+      // Fetch metadata from IPFS
+      let metadata = null;
+      let imageUrl = null;
+      if (tokenURI) {
+        try {
+          const ipfsUrl = tokenURI.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/');
+          const response = await fetch(ipfsUrl);
+          if (response.ok) {
+            metadata = await response.json();
+            if (metadata.image) {
+              imageUrl = metadata.image.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/');
+            }
+          }
+        } catch (metadataError) {
+          console.warn(`Metadata fetch failed for token ${tokenId}:`, metadataError);
+        }
+      }
+      
+      setNftDetails(prev => ({
+        ...prev,
+        [tokenId]: {
+          stage: parseInt(nftData.currentStage),
+          wateringCount: parseInt(nftData.wateringCount),
+          lastWatered: parseInt(nftData.lastWateredTimestamp),
+          tokenURI: tokenURI,
+          canEvolve: nftData.canEvolve,
+          evolutionThreshold: parseInt(nftData.currentStageEvolutionThreshold),
+          metadata: metadata,
+          imageUrl: imageUrl
+        }
+      }));
+    } catch (error) {
+      console.error(`Error loading details for token ${tokenId}:`, error);
+    }
+  };
+
+  const handleWater = async (tokenId) => {
+    if (!account) {
+      alert('Lütfen cüzdanınızı bağlayın');
+      return;
+    }
+
+    setWatering(prev => ({ ...prev, [tokenId]: true }));
+    
+    try {
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(EVOLVING_NFT_CONTRACT_ADDRESS, EVOLVING_NFT_ABI, signer);
+
+      const tx = await contract.water(tokenId);
+      await tx.wait();
+
+      alert('💧 NFT başarıyla sulandı! Gelişimi için tekrar sulayabilirsiniz.');
+      
+      // Reload NFT details
+      await loadNFTDetails(tokenId);
+      
+    } catch (error) {
+      console.error('Watering error:', error);
+      alert('❌ Sulama hatası: ' + error.message);
+    } finally {
+      setWatering(prev => ({ ...prev, [tokenId]: false }));
+    }
+  };
+
+  const handleEvolve = async (tokenId) => {
+    if (!account) {
+      alert('Lütfen cüzdanınızı bağlayın');
+      return;
+    }
+
+    setEvolving(prev => ({ ...prev, [tokenId]: true }));
+    
+    try {
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(EVOLVING_NFT_CONTRACT_ADDRESS, EVOLVING_NFT_ABI, signer);
+
+      const tx = await contract.evolve(tokenId);
+      await tx.wait();
+
+      alert('🌟 NFT başarıyla evrimleşti! Yeni aşamasını görmek için sayfayı yenileyin.');
+      
+      // Reload NFT details
+      await loadNFTDetails(tokenId);
+      
+    } catch (error) {
+      console.error('Evolution error:', error);
+      alert('❌ Evrim hatası: ' + error.message);
+    } finally {
+      setEvolving(prev => ({ ...prev, [tokenId]: false }));
+    }
+  };
+
+  const openDetailsModal = (nft) => {
+    setSelectedNFT(nft);
+    setShowDetailsModal(true);
+  };
+
+  const getStageInfo = (stage) => {
+    const stages = [
+      { name: '🌰 Tohum', description: 'Başlangıç aşaması', color: 'brown' },
+      { name: '🌱 Filiz', description: 'İlk büyüme', color: 'green' },
+      { name: '🌿 Fidan', description: 'Genç bitki', color: 'green' },
+      { name: '🌸 Çiçek', description: 'Çiçeklenme', color: 'pink' },
+      { name: '🍎 Meyve', description: 'Olgunluk', color: 'red' }
+    ];
+    return stages[stage] || stages[0];
+  };
+
+  const getProgressPercentage = (stage, wateringCount, evolutionThreshold) => {
+    if (stage >= 4) return 100; // Final stage
+    if (!evolutionThreshold) return 0;
+    
+    return Math.min((wateringCount / evolutionThreshold) * 100, 100);
+  };
+
+  const getNextEvolutionInfo = (stage, wateringCount, evolutionThreshold) => {
+    if (stage >= 4) return null; // Final stage
+    if (!evolutionThreshold) return 0;
+    
+    const needed = evolutionThreshold - wateringCount;
+    return needed > 0 ? needed : 0;
+  };
+
+  const connectWallet = async () => {
+    const result = await web3Service.connectWallet();
+    if (result.success) {
+      setAccount(result.account);
+    } else {
+      alert('Cüzdan bağlanmadı: ' + result.error);
+    }
+  };
 
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
-        <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-primary-accent border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
-        <p className="text-xl text-foreground mt-4">Bahçe yükleniyor...</p>
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary-accent border-r-transparent"></div>
       </div>
     );
   }
 
-  if (!gardenOwnerProfile) {
+  if (!account) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <div className="bg-secondary-accent p-8 rounded-xl shadow-lg max-w-lg mx-auto">
-            <h2 className="text-2xl font-bold text-foreground mb-3">🪴 Bahçe Bulunamadı</h2>
-            <p className="text-foreground/80 dark:text-foreground/70">
-                Bu cüzdan adresine ({gardenWalletAddress ? `${gardenWalletAddress.slice(0, 10)}...` : 'belirtilmemiş'}) ait bir profil bulunamadı. 
-                Bu nedenle bahçe görüntülenemiyor.
-            </p>
+      <div className="container mx-auto px-4 py-12 text-center">
+        <div className="bg-secondary-accent rounded-lg p-8 max-w-md mx-auto shadow-lg">
+          <div className="text-6xl mb-4">🌱</div>
+          <h2 className="text-2xl font-bold text-foreground mb-4">Bahçeye Hoş Geldiniz</h2>
+          <p className="text-foreground/70 mb-6">Bahçenizi görüntülemek için cüzdanınızı bağlayın.</p>
+          <button 
+            onClick={connectWallet}
+            className="bg-primary-accent text-background px-6 py-3 rounded-lg font-medium hover:brightness-90 transition-all"
+          >
+            🔗 Cüzdan Bağla
+          </button>
         </div>
       </div>
     );
   }
   
-  if (!gardenSettings && !loading) {
      return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <div className="bg-secondary-accent p-8 rounded-xl shadow-lg max-w-lg mx-auto">
-            <h2 className="text-2xl font-bold text-foreground mb-3">🚧 Bahçe Hatası</h2>
-            <p className="text-foreground/80 dark:text-foreground/70">
-                Bahçe ayarları yüklenemedi. Lütfen daha sonra tekrar deneyin.
-            </p>
-            {isOwnGarden && <p className="text-sm mt-3 text-foreground/60">Not: Bahçe ayarlarınızın oluşturulabilmesi için bir profilinizin olması gerekmektedir.</p>}
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
+      {/* Header */}
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold text-foreground mb-3">🌺 NFT Bahçem</h1>
+        <p className="text-foreground/70 text-lg">NFT'lerinizi sulayın ve evrimlerini izleyin</p>
         </div>
+
+      {/* Garden Owner Info */}
+      <div className="bg-secondary-accent rounded-lg p-4 mb-6 text-center">
+        <p className="text-sm text-foreground/70 mb-1">Bahçe Sahibi:</p>
+        <p className="font-mono text-foreground">{walletAddress}</p>
+        {account.toLowerCase() === walletAddress.toLowerCase() && (
+          <p className="text-xs text-success-accent mt-1">✅ Bu sizin bahçeniz</p>
+        )}
       </div>
-    );
-  }
 
-
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="bg-secondary-accent shadow-xl rounded-2xl p-6 md:p-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-6 border-b border-primary-accent/20">
-          <div className="mb-4 md:mb-0">
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">{displayUsername}'in Bahçesi</h1>
-            <p className="text-sm text-foreground/70 dark:text-foreground/60 mt-1 font-mono" title={gardenWalletAddress}>{gardenWalletAddress}</p>
+      {/* Garden Stats */}
+      {gardenNFTs.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-secondary-accent p-4 rounded-lg text-center">
+            <div className="text-2xl font-bold text-primary-accent">{gardenNFTs.length}</div>
+            <div className="text-sm text-foreground/70">Toplam NFT</div>
           </div>
-          {isOwnGarden && gardenSettings && (
-            <div className="mt-4 md:mt-0 flex items-center space-x-3 bg-background/70 dark:bg-dark-bg/70 p-3 rounded-lg shadow-sm">
-              <label htmlFor="privacyToggle" className="flex items-center cursor-pointer select-none">
-                <span className="mr-3 text-sm font-medium text-foreground">
-                  {gardenSettings.is_public ? 'Bahçe Herkese Açık' : 'Bahçe Özel'}
-                </span>
-                <div className="relative">
-                  <input
-                    type="checkbox"
-                    id="privacyToggle"
-                    className="sr-only"
-                    checked={gardenSettings.is_public}
-                    onChange={(e) => handlePrivacyChange(e.target.checked)}
-                    disabled={savingPrivacy}
-                  />
-                  <div className={classNames("block w-12 h-7 rounded-full transition-colors", { 'bg-primary-accent': gardenSettings.is_public, 'bg-foreground/30': !gardenSettings.is_public })}></div>
-                  <div className={classNames("dot absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition-transform", { 'transform translate-x-full': gardenSettings.is_public })}></div>
-                </div>
-              </label>
-              {savingPrivacy && 
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-solid border-primary-accent border-r-transparent"></div>
-              }
+          <div className="bg-secondary-accent p-4 rounded-lg text-center">
+            <div className="text-2xl font-bold text-success-accent">
+              {gardenNFTs.filter(nft => (nftDetails[nft.tokenId]?.stage || 0) >= 4).length}
             </div>
-          )}
+            <div className="text-sm text-foreground/70">Olgun Bitkiler</div>
+                </div>
+          <div className="bg-secondary-accent p-4 rounded-lg text-center">
+            <div className="text-2xl font-bold text-primary-accent">
+              {gardenNFTs.filter(nft => {
+                const stage = nftDetails[nft.tokenId]?.stage || 0;
+                return stage > 0 && stage < 4;
+              }).length}
+            </div>
+            <div className="text-sm text-foreground/70">Büyüyen Bitkiler</div>
+          </div>
+          <div className="bg-secondary-accent p-4 rounded-lg text-center">
+            <div className="text-2xl font-bold text-tertiary-accent">
+              {gardenNFTs.filter(nft => (nftDetails[nft.tokenId]?.stage || 0) === 0).length}
         </div>
-
-        {!isOwnGarden && gardenSettings && !gardenSettings.is_public && (
-          <div className="text-center py-12 bg-background rounded-xl shadow-inner px-6">
-            <div className="text-6xl mb-4">🔒</div>
-            <h2 className="text-2xl font-semibold text-foreground mb-2">Bu Bahçe Özel</h2>
-            <p className="text-foreground/80 dark:text-foreground/70 max-w-md mx-auto">
-              Bu bahçenin sahibi, içeriğini sadece kendisi görecek şekilde ayarlamış. 
-              Herkese açık hale getirilene kadar varlıklar görüntülenemez.
-            </p>
+            <div className="text-sm text-foreground/70">Tohumlar</div>
+          </div>
           </div>
         )}
 
-        {(!gardenSettings || gardenSettings.is_public || isOwnGarden) && (
-          <>
-            <section className="mb-12">
-              <h2 className="text-2xl font-semibold text-foreground mb-6">Tohumlar 🌱 ({seedNFTs.length})</h2>
-              {loadingNFTs ? (
-                <p className="text-foreground/70 italic">Tohumlar yükleniyor...</p>
-              ) : seedNFTs.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {seedNFTs.map(nft => (
-                    <NFTCard 
-                        key={nft.tokenId || nft.id} // Supabase'den geliyorsa id olabilir
-                        nft={nft}
-                        isOwned={isOwnGarden} // Bahçe sahibiyse tüm NFT'ler onundur
-                        // onSell, onBurn gibi aksiyonlar bu sayfada olmayabilir, veya farklı olabilir
-                        currentAccount={currentAccount} 
+      {/* Garden Grid */}
+      {gardenNFTs.length > 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+          {gardenNFTs.map((nft) => {
+            const details = nftDetails[nft.tokenId] || {};
+            const stageInfo = getStageInfo(details.stage || 0);
+            const progress = getProgressPercentage(details.stage || 0, details.wateringCount || 0, details.evolutionThreshold || 0);
+            const wateringsNeeded = getNextEvolutionInfo(details.stage || 0, details.wateringCount || 0, details.evolutionThreshold || 0);
+            const canWater = account.toLowerCase() === walletAddress.toLowerCase();
+
+            return (
+              <div key={nft.tokenId} className="bg-secondary-accent rounded-xl shadow-lg overflow-hidden">
+                {/* NFT Image */}
+                <div className="aspect-square relative bg-gradient-to-br from-green-100 to-blue-100 dark:from-green-900 dark:to-blue-900">
+                  {details.imageUrl ? (
+                    <Image
+                      src={details.imageUrl}
+                      alt={details.metadata?.name || `NFT #${nft.tokenId}`}
+                      fill
+                      sizes="400px"
+                      className="object-cover rounded-t-xl"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
                     />
-                  ))}
+                  ) : null}
+                  
+                  {/* Fallback Emoji Display */}
+                  <div 
+                    className="absolute inset-0 flex items-center justify-center"
+                    style={{ display: details.imageUrl ? 'none' : 'flex' }}
+                  >
+                    <div className="text-6xl">{stageInfo.name.split(' ')[0]}</div>
+                  </div>
+                  
+                  {/* Stage Badge */}
+                  <div className="absolute top-2 left-2 bg-background/80 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium z-10">
+                    Aşama {(details.stage || 0) + 1}
+                  </div>
+                  
+                  {/* Details Button */}
+                  <button
+                    onClick={() => openDetailsModal(nft)}
+                    className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm p-2 rounded-full hover:bg-background transition-colors z-10"
+                  >
+                    ℹ️
+                  </button>
+                </div>
+
+                {/* NFT Info */}
+                <div className="p-4">
+                  <h3 className="font-semibold text-foreground mb-1 truncate">
+                    {nft.name || `NFT #${nft.tokenId}`}
+                  </h3>
+                  <p className="text-sm text-foreground/70 mb-3">{stageInfo.name}</p>
+
+                  {/* Progress Bar */}
+                  <div className="mb-3">
+                    <div className="flex justify-between text-xs text-foreground/70 mb-1">
+                      <span>Evrim İlerlemesi</span>
+                      <span>{Math.round(progress)}%</span>
+                    </div>
+                    <div className="w-full bg-background/50 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-grow-green to-primary-accent h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${progress}%` }}
+                      ></div>
+                    </div>
+                    {wateringsNeeded > 0 ? (
+                      <p className="text-xs text-foreground/60 mt-1">
+                        {wateringsNeeded} sulama daha gerekli
+                      </p>
+                    ) : details.canEvolve ? (
+                      <p className="text-xs text-success-accent mt-1 font-medium">
+                        ✨ Evrim için hazır!
+                      </p>
+                    ) : null}
+                  </div>
+
+                  {/* Stats */}
+                  <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
+                    <div className="bg-background/30 rounded p-2 text-center">
+                      <div className="font-semibold text-foreground">{details.wateringCount || 0}</div>
+                      <div className="text-foreground/60">Sulama</div>
+                    </div>
+                    <div className="bg-background/30 rounded p-2 text-center">
+                      <div className="font-semibold text-foreground">#{nft.tokenId}</div>
+                      <div className="text-foreground/60">Token ID</div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  {canWater ? (
+                    <div className="space-y-2">
+                      {/* Water Button - Only show if not fully evolved */}
+                      {(details.stage || 0) < 4 && (
+                        <button
+                          onClick={() => handleWater(nft.tokenId)}
+                          disabled={watering[nft.tokenId]}
+                          className="w-full btn-water disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center hover:scale-105 transition-all"
+                        >
+                          {watering[nft.tokenId] ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin mr-2"></div>
+                              Sulanıyor...
+                            </>
+                          ) : (
+                            '💧 Sula'
+                          )}
+                        </button>
+                      )}
+                      
+                      {/* Evolve Button */}
+                      {details.canEvolve && (
+                        <button
+                          onClick={() => handleEvolve(nft.tokenId)}
+                          disabled={evolving[nft.tokenId]}
+                          className="w-full btn-evolve disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center hover:scale-105 transition-all"
+                        >
+                          {evolving[nft.tokenId] ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin mr-2"></div>
+                              Evrimleşiyor...
+                            </>
+                          ) : (
+                            '🌟 Evrimleş'
+                          )}
+                        </button>
+                      )}
+                      
+                      {/* Fully Evolved Status */}
+                      {(details.stage || 0) >= 4 && (
+                        <div className="w-full btn-success flex items-center justify-center">
+                          🏆 Tam Evrimleşmiş
+                        </div>
+                      )}
                 </div>
               ) : (
-                <div className="text-center py-10 bg-background rounded-xl shadow-inner px-6">
-                    <div className="text-5xl mb-3">🍂</div>
-                    <p className="text-lg text-foreground/80 dark:text-foreground/70">
-                        {isOwnGarden ? "Henüz hiç tohum ekmemişsiniz." : "Bu bahçıvan henüz hiç tohum ekmemiş."}
-                    </p>
-                    {isOwnGarden && (
-                        <Link href="/mint" className="mt-4 inline-block bg-primary-accent hover:brightness-95 text-background px-5 py-2.5 rounded-lg font-medium transition-colors shadow hover:shadow-md">
-                            İlk Tohumunu Ek
-                        </Link>
+                    <div className="w-full bg-text-muted text-white py-2 px-4 rounded-lg font-medium text-center cursor-not-allowed">
+                      🔒 Sadece sahip işlem yapabilir
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="text-center py-12 bg-secondary-accent rounded-xl shadow">
+          <div className="text-6xl mb-4">🌱</div>
+          <h3 className="text-2xl font-semibold text-foreground mb-3">Bahçe Boş</h3>
+          <p className="text-foreground/70 mb-6 max-w-md mx-auto">
+            {account.toLowerCase() === walletAddress.toLowerCase() 
+              ? 'Henüz bahçenizde NFT bulunmuyor. NFT\'lerinizi "NFT\'lerim" sayfasından bahçenize transfer edebilirsiniz.'
+              : 'Bu bahçede henüz NFT bulunmuyor.'
+            }
+          </p>
+          {account.toLowerCase() === walletAddress.toLowerCase() && (
+            <a 
+              href="/my-nfts"
+              className="bg-primary-accent text-background px-6 py-3 rounded-lg font-medium hover:brightness-90 transition-all"
+            >
+              💎 NFT'lerime Git
+            </a>
                     )}
                 </div>
               )}
-            </section>
 
-            <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-6">Bitkiler 🪴 ({plantNFTs.length})</h2>
-              {loadingNFTs ? (
-                <p className="text-foreground/70 italic">Bitkiler yükleniyor...</p>
-              ) : plantNFTs.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {plantNFTs.map(nft => (
-                     <NFTCard 
-                        key={nft.tokenId || nft.id}
-                        nft={nft}
-                        isOwned={isOwnGarden}
-                        currentAccount={currentAccount} 
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-10 bg-background rounded-xl shadow-inner px-6">
-                    <div className="text-5xl mb-3">🥀</div>
-                    <p className="text-lg text-foreground/80 dark:text-foreground/70">
-                        {isOwnGarden ? "Henüz hiç bitkiniz filizlenmemiş." : "Bu bahçıvanın henüz hiç bitkisi filizlenmemiş."}
-                    </p>
-                     {isOwnGarden && seedNFTs.length > 0 && (
-                        <p className="text-sm mt-2 text-foreground/60">Tohumlarınızı sulayarak bitkiye dönüştürebilirsiniz.</p>
-                     )}
-                </div>
-              )}
-            </section>
-          </>
-        )}
+      {/* Evolution Guide */}
+      <div className="mt-12 bg-secondary-accent rounded-lg p-6">
+        <h2 className="text-xl font-bold text-foreground mb-4">🌱 Evrim Rehberi</h2>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          {[
+            { stage: '🌰', name: 'Tohum', waterings: '0', description: 'Başlangıç' },
+            { stage: '🌱', name: 'Filiz', waterings: '3', description: 'İlk büyüme' },
+            { stage: '🌿', name: 'Fidan', waterings: '5', description: 'Genç bitki' },
+            { stage: '🌸', name: 'Çiçek', waterings: '7', description: 'Çiçeklenme' },
+            { stage: '🍎', name: 'Meyve', waterings: '10', description: 'Olgunluk' }
+          ].map((stage, index) => (
+            <div key={index} className="text-center p-4 bg-background/30 rounded-lg">
+              <div className="text-3xl mb-2">{stage.stage}</div>
+              <div className="font-semibold text-foreground">{stage.name}</div>
+              <div className="text-sm text-foreground/70 mb-2">{stage.description}</div>
+              <div className="text-xs text-primary-accent font-medium">
+                {index === 0 ? 'Başla' : `${stage.waterings} sulama`}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
+
+      {/* Details Modal */}
+      {showDetailsModal && selectedNFT && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-secondary-accent rounded-lg p-6 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-foreground">NFT Detayları</h3>
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                className="bg-background/50 p-2 rounded-full hover:bg-background transition-colors"
+              >
+                ❌
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {/* NFT Image in Modal */}
+              <div className="text-center p-4 bg-background/30 rounded-lg">
+                <div className="w-32 h-32 mx-auto mb-4 relative rounded-lg overflow-hidden bg-gradient-to-br from-green-100 to-blue-100 dark:from-green-900 dark:to-blue-900">
+                  {nftDetails[selectedNFT.tokenId]?.imageUrl ? (
+                    <Image
+                      src={nftDetails[selectedNFT.tokenId].imageUrl}
+                      alt={nftDetails[selectedNFT.tokenId]?.metadata?.name || `NFT #${selectedNFT.tokenId}`}
+                      fill
+                      sizes="128px"
+                      className="object-cover"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  
+                  {/* Fallback Emoji */}
+                  <div 
+                    className="absolute inset-0 flex items-center justify-center"
+                    style={{ display: nftDetails[selectedNFT.tokenId]?.imageUrl ? 'none' : 'flex' }}
+                  >
+                    <div className="text-4xl">
+                      {getStageInfo(nftDetails[selectedNFT.tokenId]?.stage || 0).name.split(' ')[0]}
+                    </div>
+                  </div>
+                </div>
+                <div className="font-semibold text-foreground">
+                  {nftDetails[selectedNFT.tokenId]?.metadata?.name || selectedNFT.name || `NFT #${selectedNFT.tokenId}`}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="bg-background/30 rounded p-3">
+                  <div className="text-foreground/70 mb-1">Token ID</div>
+                  <div className="font-semibold text-foreground">#{selectedNFT.tokenId}</div>
+                </div>
+                <div className="bg-background/30 rounded p-3">
+                  <div className="text-foreground/70 mb-1">Aşama</div>
+                  <div className="font-semibold text-foreground">
+                    {getStageInfo(nftDetails[selectedNFT.tokenId]?.stage || 0).name}
+                  </div>
+                </div>
+                <div className="bg-background/30 rounded p-3">
+                  <div className="text-foreground/70 mb-1">Toplam Sulama</div>
+                  <div className="font-semibold text-foreground">
+                    {nftDetails[selectedNFT.tokenId]?.wateringCount || 0}
+                  </div>
+                </div>
+                <div className="bg-background/30 rounded p-3">
+                  <div className="text-foreground/70 mb-1">Son Sulama</div>
+                  <div className="font-semibold text-foreground text-xs">
+                    {nftDetails[selectedNFT.tokenId]?.lastWatered 
+                      ? new Date(nftDetails[selectedNFT.tokenId].lastWatered * 1000).toLocaleDateString('tr-TR')
+                      : 'Hiç sulanmadı'
+                    }
+                  </div>
+                </div>
+              </div>
+
+              {/* Progress */}
+              <div className="bg-background/30 rounded p-3">
+                <div className="text-foreground/70 mb-2">Evrim İlerlemesi</div>
+                <div className="w-full bg-background/50 rounded-full h-3 mb-2">
+                  <div 
+                    className="bg-gradient-to-r from-grow-green to-primary-accent h-3 rounded-full transition-all duration-300"
+                    style={{ 
+                      width: `${getProgressPercentage(
+                        nftDetails[selectedNFT.tokenId]?.stage || 0, 
+                        nftDetails[selectedNFT.tokenId]?.wateringCount || 0,
+                        nftDetails[selectedNFT.tokenId]?.evolutionThreshold || 0
+                      )}%` 
+                    }}
+                  ></div>
+                </div>
+                <div className="text-sm text-foreground/70">
+                  {(() => {
+                    const needed = getNextEvolutionInfo(
+                      nftDetails[selectedNFT.tokenId]?.stage || 0, 
+                      nftDetails[selectedNFT.tokenId]?.wateringCount || 0,
+                      nftDetails[selectedNFT.tokenId]?.evolutionThreshold || 0
+                    );
+                    return needed > 0 
+                      ? `Sonraki aşama için ${needed} sulama daha gerekli`
+                      : 'Evrim için hazır veya maksimum aşamada!';
+                  })()}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

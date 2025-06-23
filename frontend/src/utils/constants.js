@@ -1,10 +1,16 @@
 // Contract ABI'leri ve adresler
-export const NFT_CONTRACT_ADDRESS = '0x0B306BF915C4d645ff596e518fAf3F9669b97016';
-export const MARKETPLACE_CONTRACT_ADDRESS = '0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1';
+export const NFT_CONTRACT_ADDRESS = '0x8A791620dd6260079BF849Dc5567aDC3F2FdC318';
+export const MARKETPLACE_CONTRACT_ADDRESS = '0x610178dA211FEF7D417bC0e6FeD39F05609AD788';
+export const EVOLVING_NFT_CONTRACT_ADDRESS = "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e";
+export const ADMIN_WALLET_ADDRESS = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266";
 
 // Güncel NFT ABI'sini import et
 import newNftAbi from './new-nft-abi.json';
 export const NFT_ABI = newNftAbi;
+
+// Compile edilmiş EvolvingNFT ABI'sini import et
+import evolvingNftArtifacts from './EvolvingNFT.json';
+export const EVOLVING_NFT_ABI = evolvingNftArtifacts.abi;
 
 export const MARKETPLACE_ABI = [
   {
