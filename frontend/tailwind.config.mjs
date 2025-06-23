@@ -8,22 +8,50 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Doğa Teması Renkleri
         background: "var(--background)",
         foreground: "var(--foreground)",
         'primary-accent': "var(--primary-accent)",
         'secondary-accent': "var(--secondary-accent)",
-        'light-bg': '#F5EFE6',
-        'light-fg': '#4A403A',
-        'light-primary': '#8C6A56',
-        'light-secondary': '#E8DFCA',
-        'dark-bg': '#3E362F',
-        'dark-fg': '#EAE0D6',
-        'dark-primary': '#B08D74',
-        'dark-secondary': '#5A504A',
+        'tertiary-accent': "var(--tertiary-accent)",
+        // İşlevsel renkler
+        'water-blue': "var(--water-blue)",
+        'earth-brown': "var(--earth-brown)",
+        'sun-yellow': "var(--sun-yellow)",
+        'grow-green': "var(--grow-green)",
+        'sell-orange': "var(--sell-orange)",
+        'danger-red': "var(--danger-red)",
+        'success-green': "var(--success-green)",
+        // Arayüz renkleri
+        'card-bg': "var(--card-bg)",
+        'card-hover': "var(--card-hover)",
+        'text-muted': "var(--text-muted)",
+        'border-color': "var(--border-color)",
+        'navbar-bg': "var(--navbar-bg)",
       },
       fontFamily: {
-        sans: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+        sans: ['Inter', 'Segoe UI', 'Tahoma', 'Geneva', 'Verdana', 'sans-serif'],
       },
+      boxShadow: {
+        'nature-light': '0 4px 6px var(--shadow-light)',
+        'nature-medium': '0 8px 16px var(--shadow-medium)',
+        'nature-strong': '0 12px 24px var(--shadow-medium)',
+      },
+      animation: {
+        'grow': 'grow 0.3s ease-in-out',
+        'bounce-gentle': 'bounce-gentle 2s infinite',
+      },
+      keyframes: {
+        grow: {
+          '0%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.05)' },
+          '100%': { transform: 'scale(1)' },
+        },
+        'bounce-gentle': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-2px)' },
+        }
+      }
     },
   },
   plugins: [],

@@ -5,29 +5,30 @@ import Image from 'next/image';
 
 export default function NFTCard({ 
   nft, 
-  isOwned = false,    // Bu NFT kullanıcıya mı ait?
-  isListed = false,   // Bu NFT satışta mı?
-  onSell,             // Satışa çıkarma fonksiyonu (tokenId, price)
-  onBuy,              // Satın alma fonksiyonu (listingId, price)
-  onCancel,           // Satıştan kaldırma fonksiyonu (listingId)
-  onBurn,             // NFT yakma fonksiyonu (tokenId)
-  currentAccount      // Mevcut bağlı kullanıcı cüzdanı
+  isOwned = false,    
+  isListed = false,   
+  onSell,             
+  onBuy,              
+  onCancel,           
+  onBurn,             
+  currentAccount      
 }) {
-  const [loadingAction, setLoadingAction] = useState(false); // Buton aksiyonları için genel loading
+  const [loadingAction, setLoadingAction] = useState(false);
   const [sellPrice, setSellPrice] = useState('');
   const [showSellModal, setShowSellModal] = useState(false);
-  const [imageUrl, setImageUrl] = useState('/placeholder-nft.jpg'); // Temaya uygun placeholder olabilir
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [imageUrl, setImageUrl] = useState('/placeholder-nft-beige.svg');
   const [imageLoading, setImageLoading] = useState(true);
   const [metadata, setMetadata] = useState(null);
 
   useEffect(() => {
     if (nft?.tokenURI) {
       loadMetadataAndImage(nft.tokenURI);
-    } else if (nft?.metadata) { // Eğer metadata doğrudan geliyorsa (örn: listing objesinde)
+    } else if (nft?.metadata) {
       setMetadata(nft.metadata);
       loadImageFromDirectMetadata(nft.metadata);
     } else {
-      setImageUrl('/placeholder-nft-beige.svg'); // Yeni placeholder
+      setImageUrl('/placeholder-nft-beige.svg');
       setImageLoading(false);
     }
   }, [nft?.tokenURI, nft?.metadata]);
@@ -79,9 +80,16 @@ export default function NFTCard({
   const nftName = metadata?.name || nft?.name || 'İsimsiz Varlık';
   const nftDescription = metadata?.description || nft?.description || 'Açıklama bulunmuyor.';
 
-  // --- Eylemler için Handler Fonksiyonları ---
-  const handleInitiateSell = () => {
-    if (!isOwned) return; // Sadece sahip olunanlar satılabilir
+  // Action handlers
+  const handleCardClick = (e) => {
+    // Eğer tıklanan element buton ise modal açma
+    if (e.target.closest('button')) return;
+    setShowDetailModal(true);
+  };
+
+  const handleInitiateSell = (e) => {
+    e.stopPropagation();
+    if (!isOwned) return;
     setShowSellModal(true);
   };
 
@@ -102,10 +110,11 @@ export default function NFTCard({
     setLoadingAction(false);
   };
 
-  const executeBuy = async () => {
+  const executeBuy = async (e) => {
+    e.stopPropagation();
     setLoadingAction(true);
     try {
-      await onBuy(nft.listingId, nft.price); // listingId ve price listing objesinden gelmeli
+      await onBuy(nft.listingId, nft.price);
     } catch (error) {
       console.error('NFTCard satın alma hatası:', error);
       alert('Satın alma sırasında bir hata oluştu.');
@@ -113,11 +122,12 @@ export default function NFTCard({
     setLoadingAction(false);
   };
 
-  const executeCancelListing = async () => {
+  const executeCancelListing = async (e) => {
+    e.stopPropagation();
     if (!window.confirm('Bu listelemeyi iptal etmek istediğinizden emin misiniz?')) return;
     setLoadingAction(true);
     try {
-      await onCancel(nft.listingId); // listingId listing objesinden gelmeli
+      await onCancel(nft.listingId);
     } catch (error) {
       console.error('NFTCard satış iptal hatası:', error);
       alert('Satış iptali sırasında bir hata oluştu.');
@@ -125,129 +135,235 @@ export default function NFTCard({
     setLoadingAction(false);
   };
 
-  const executeBurn = async () => {
-    if (!window.confirm('DİKKAT: Bu varlığı kalıcı olarak yakmak (silmek) istediğinizden emin misiniz? Bu işlem geri alınamaz!')) return;
-    if (!window.confirm('Son bir onay: Bu NFT\yi yakmak istediğinize gerçekten emin misiniz?')) return;
-    setLoadingAction(true);
-    try {
-      await onBurn(nft.tokenId);
-    } catch (error) {
-      console.error('NFTCard yakma hatası:', error);
-      alert('Yakma işlemi sırasında bir hata oluştu.');
-    }
-    setLoadingAction(false);
-  };
-
   const isOwnerOfListedItem = currentAccount && nft?.seller && currentAccount.toLowerCase() === nft.seller.toLowerCase();
   const canBuy = !isOwnerOfListedItem && currentAccount;
 
-  // --- Buton Stilleri ---
-  const baseButtonClass = "flex-1 min-w-[120px] py-2.5 px-4 rounded-lg font-semibold transition-all duration-200 ease-in-out disabled:opacity-70 disabled:cursor-not-allowed shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-secondary-accent";
-  const primaryButtonClass = `${baseButtonClass} bg-primary-accent text-background hover:brightness-95 focus:ring-primary-accent`;
-  const dangerButtonClass = `${baseButtonClass} bg-red-500 text-white hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 focus:ring-red-500`;
-  const neutralButtonClass = `${baseButtonClass} bg-primary-accent/30 text-primary-accent cursor-default`;
-
   return (
     <>
-      <div className="bg-secondary-accent rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-shadow duration-300 flex flex-col h-full">
+      {/* Compact NFT Card */}
+      <div 
+        className="nft-card-compact group"
+        onClick={handleCardClick}
+      >
+        {/* Image Section - Responsive */}
         <div className="aspect-square relative w-full">
           {imageLoading ? (
-            <div className="w-full h-full bg-background/70 dark:bg-dark-bg/70 animate-pulse flex items-center justify-center">
-              <span className="text-foreground opacity-60">Yükleniyor...</span>
+            <div className="w-full h-full bg-secondary-accent animate-pulse flex items-center justify-center">
+              <span className="text-xs text-foreground">Yükleniyor...</span>
             </div>
           ) : (
             <Image
               src={imageUrl}
               alt={nftName}
               fill
-              className="object-cover"
-              sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 22vw"
-              onError={() => setImageUrl('/placeholder-nft-beige.svg')} // Hata durumunda placeholder
+              className="object-cover group-hover:scale-105 transition-transform duration-300 rounded-t-xl"
+              sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 20vw, (max-width: 1280px) 16vw, 14vw"
+              priority={false}
+              onError={() => setImageUrl('/placeholder-nft-beige.svg')}
             />
           )}
+          
+                      {/* Overlay Badge */}
+            <div className="absolute top-2 right-2">
+              {isListed ? (
+                <span className="bg-success-accent text-white text-xs px-2 py-1 rounded-full font-medium">
+                  Satışta
+                </span>
+              ) : isOwned ? (
+                <span className="bg-primary-accent text-white text-xs px-2 py-1 rounded-full font-medium">
+                  Sahibim
+                </span>
+              ) : (
+                <span className="bg-text-muted text-white text-xs px-2 py-1 rounded-full font-medium">
+                  NFT
+                </span>
+          )}
+            </div>
         </div>
         
-        <div className="p-5 flex flex-col flex-grow">
-          <h3 className="text-lg font-semibold text-foreground mb-1.5 truncate" title={nftName}>{nftName}</h3>
-          {nftDescription && <p className="text-sm text-foreground/80 dark:text-foreground/70 mb-3 line-clamp-2">{nftDescription}</p>}
+        {/* Content Section - Daha kompakt */}
+        <div className="p-3">
+          <h3 className="font-semibold text-sm truncate mb-1 text-foreground" title={nftName}>
+            {nftName}
+          </h3>
           
-          <div className="text-xs text-foreground/60 dark:text-foreground/50 mb-1">
-            Token ID: #{nft?.tokenId || 'N/A'}
+          <div className="text-xs text-text-muted mb-2">
+            #{nft?.tokenId || 'N/A'}
           </div>
-          {isListed && nft?.seller && (
-            <div className="text-xs text-foreground/60 dark:text-foreground/50 mb-3 truncate" title={nft.seller}>
-              Satıcı: {nft.seller.slice(0, 6)}...{nft.seller.slice(-4)}
-            </div>
-          )}
 
-          <div className="mt-auto space-y-2 pt-3">
+          {/* Price & Actions */}
+          <div className="flex items-center justify-between">
             {isListed && nft?.price && (
-                 <div className="text-right mb-2">
-                    <span className="text-xl font-bold text-primary-accent">{nft.price} ETH</span>
+              <div className="flex-1">
+                <span className="text-sm font-bold text-primary-accent">
+                  {nft.price} ETH
+                </span>
                  </div>
             )}
 
-            {/* Eylem Butonları */} 
-            <div className="flex gap-2 flex-wrap items-center">
+            <div className="flex gap-1">
+              {/* Action Buttons - Sadece iconlar */}
                 {isOwned && !isListed && onSell && (
-                    <button onClick={handleInitiateSell} disabled={loadingAction} className={primaryButtonClass}>
-                        {loadingAction ? 'Bekle...' : 'Satışa Çıkar'}
+                <button 
+                  onClick={handleInitiateSell} 
+                  disabled={loadingAction}
+                  className="w-8 h-8 rounded-full text-xs transition-all flex items-center justify-center btn-sell hover:scale-105 shadow-sm"
+                  title="Satışa Çıkar"
+                >
+                  🛍️
                     </button>
                 )}
 
                 {isListed && canBuy && onBuy && (
-                    <button onClick={executeBuy} disabled={loadingAction} className={primaryButtonClass}>
-                        {loadingAction ? 'Alınıyor...' : 'Satın Al'}
+                <button 
+                  onClick={executeBuy} 
+                  disabled={loadingAction}
+                  className="w-8 h-8 rounded-full text-xs transition-all flex items-center justify-center btn-success hover:scale-105 shadow-sm"
+                  title="Satın Al"
+                >
+                  💰
                     </button>
                 )}
 
                 {isListed && isOwnerOfListedItem && onCancel && (
-                     <button onClick={executeCancelListing} disabled={loadingAction} className={dangerButtonClass}> 
-                        {loadingAction ? 'İptal Ediliyor...' : 'Satışı İptal Et'}
+                <button 
+                  onClick={executeCancelListing} 
+                  disabled={loadingAction}
+                  className="w-8 h-8 rounded-full text-xs transition-all flex items-center justify-center btn-danger hover:scale-105 shadow-sm"
+                  title="Satışı İptal Et"
+                >
+                  ❌
                     </button>
-                )}
-                
-                {/* Sahip olunan ve satışta olmayan bir NFT için Yakma butonu */} 
-                {isOwned && !isListed && onBurn && (
-                    <button onClick={executeBurn} disabled={loadingAction} className={`${dangerButtonClass} opacity-80 hover:opacity-100`}>
-                        {loadingAction ? 'Yakılıyor...' : 'Yak'}
-                    </button>
-                )}
-
-                {isListed && isOwnerOfListedItem && !onCancel && (
-                     <div className={`${neutralButtonClass} text-center w-full`}>Sizin Tarafınızdan Listelendi</div>
-                )}
-                 {!isListed && isOwned && !onSell && !onBurn && (
-                    <div className={`${neutralButtonClass} text-center w-full`}>Bahçenizde</div>
                 )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Satış Modalı */} 
+      {/* Detail Modal */}
+      {showDetailModal && (
+        <div className="fixed inset-0 modal-backdrop flex items-center justify-center p-4 z-50">
+          <div className="bg-card-bg border border-border-color rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="relative p-6">
+              {/* Close Button */}
+                              <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="absolute top-4 right-4 w-8 h-8 bg-secondary-accent hover:bg-card-hover rounded-full flex items-center justify-center transition-colors"
+                >
+                  ✕
+                </button>
+
+              {/* Content */}
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Image */}
+                <div className="aspect-square relative rounded-xl overflow-hidden">
+                  <Image
+                    src={imageUrl}
+                    alt={nftName}
+                    fill
+                    className="object-cover"
+                    sizes="400px"
+                  />
+                </div>
+
+                {/* Details */}
+                <div>
+                  <h2 className="text-2xl font-bold mb-4 text-foreground">{nftName}</h2>
+                  
+                  <div className="space-y-3 mb-6">
+                    <div>
+                      <span className="text-sm font-medium text-text-muted">Token ID:</span>
+                      <p className="text-lg text-foreground">#{nft?.tokenId}</p>
+                    </div>
+                    
+                    <div>
+                      <span className="text-sm font-medium text-text-muted">Açıklama:</span>
+                      <p className="text-foreground">{nftDescription}</p>
+                    </div>
+
+                    {nft?.seller && (
+                      <div>
+                        <span className="text-sm font-medium text-text-muted">Satıcı:</span>
+                        <p className="font-mono text-sm text-foreground">{nft.seller}</p>
+                      </div>
+                    )}
+
+                    {isListed && nft?.price && (
+                      <div>
+                        <span className="text-sm font-medium text-text-muted">Fiyat:</span>
+                        <p className="text-3xl font-bold text-primary-accent">{nft.price} ETH</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 flex-wrap">
+                    {isOwned && !isListed && onSell && (
+                      <button 
+                        onClick={handleInitiateSell}
+                        className="btn-sell flex-1 min-w-[120px] hover:scale-105"
+                      >
+                        🛍️ Satışa Çıkar
+                      </button>
+                    )}
+
+                    {isListed && canBuy && onBuy && (
+                      <button 
+                        onClick={executeBuy}
+                        disabled={loadingAction}
+                        className="btn-success flex-1 min-w-[120px] hover:scale-105 disabled:opacity-50"
+                      >
+                        {loadingAction ? 'Alınıyor...' : '💰 Satın Al'}
+                      </button>
+                    )}
+
+                    {isListed && isOwnerOfListedItem && onCancel && (
+                        <button 
+                          onClick={executeCancelListing}
+                          disabled={loadingAction}
+                          className="btn-danger flex-1 min-w-[120px] hover:scale-105 disabled:opacity-50"
+                        >
+                          {loadingAction ? 'İptal Ediliyor...' : '❌ Satışı İptal Et'}
+                        </button>
+                      )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sell Modal */}
       {showSellModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-opacity duration-300 ease-in-out">
-          <div className="bg-secondary-accent p-6 rounded-lg shadow-xl w-full max-w-md space-y-4">
-            <h4 className="text-xl font-semibold text-foreground">NFT'yi Satışa Çıkar</h4>
-            <div>
-              <label htmlFor="sellPrice" className="block text-sm font-medium text-foreground mb-1">Satış Fiyatı (ETH)</label>
+        <div className="fixed inset-0 modal-backdrop flex items-center justify-center p-4 z-50">
+          <div className="bg-card-bg border border-border-color p-6 rounded-xl shadow-2xl w-full max-w-md">
+            <h4 className="text-xl font-semibold mb-4 text-foreground">🛍️ NFT'yi Satışa Çıkar</h4>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2 text-foreground">Satış Fiyatı (ETH)</label>
               <input 
                 type="number" 
-                id="sellPrice" 
                 value={sellPrice} 
                 onChange={(e) => setSellPrice(e.target.value)} 
                 placeholder="0.1"
                 step="0.01"
                 min="0.0001"
-                className="w-full px-3 py-2 bg-background border border-primary-accent/60 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-accent placeholder:text-foreground/50"
+                className="w-full px-3 py-2 border border-border-color rounded-lg focus:ring-2 focus:ring-primary-accent focus:border-transparent bg-secondary-accent text-foreground"
               />
             </div>
-            <div className="flex justify-end gap-3 pt-2">
-              <button onClick={() => setShowSellModal(false)} disabled={loadingAction} className={`${baseButtonClass} bg-background text-foreground hover:bg-background/80 focus:ring-primary-accent`}>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setShowSellModal(false)} 
+                disabled={loadingAction}
+                className="flex-1 btn-secondary disabled:opacity-50"
+              >
                 İptal
               </button>
-              <button onClick={executeSell} disabled={loadingAction || !sellPrice} className={primaryButtonClass}>
+              <button 
+                onClick={executeSell} 
+                disabled={loadingAction || !sellPrice}
+                className="flex-1 btn-sell disabled:opacity-50"
+              >
                 {loadingAction ? 'İşleniyor...' : 'Satışa Çıkar'}
               </button>
             </div>

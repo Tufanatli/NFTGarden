@@ -2,151 +2,279 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
-import { web3Service } from '../../utils/web3';
-import SeedNFT_ABI from '../../utils/contracts/SeedNFT.json';
+import { 
+  EVOLVING_NFT_CONTRACT_ADDRESS, 
+  EVOLVING_NFT_ABI,
+  MARKETPLACE_CONTRACT_ADDRESS,
+  MARKETPLACE_ABI,
+  ADMIN_WALLET_ADDRESS 
+} from '../../utils/constants';
 import { uploadFileToIPFS, createAndUploadMetadata } from '../../utils/pinata';
 
-const SEED_NFT_CONTRACT_ADDRESS = "0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690"; 
-const ADMIN_WALLET_ADDRESS = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"; 
+// --- Helper: Stage Names and URIs ---
+const STAGE_NAMES = ['🌰 Tohum', '🌱 Filiz', '🌿 Fidan', '🌸 Çiçek', '🍎 Meyve'];
+const STAGE_DESCRIPTIONS = [
+  'NFT\'nin başlangıç aşaması',
+  'İlk büyüme aşaması', 
+  'Genç bitki aşaması',
+  'Çiçeklenme aşaması',
+  'Olgunluk aşaması'
+];
+const DEFAULT_EVOLUTION_THRESHOLDS = {
+  sprout: 3, sapling: 5, bloom: 7, fruiting: 10
+};
+// ----------------------------------------
 
 export default function AdminPage() {
-  const [currentAccount, setCurrentAccount] = useState(null);
+  const [account, setAccount] = useState(null);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
+  const [processing, setProcessing] = useState(false);
+  const [logs, setLogs] = useState([]);
 
-  const [recipientAddress, setRecipientAddress] = useState('');
+  // NFT Basic Info
   const [nftName, setNftName] = useState('');
   const [nftDescription, setNftDescription] = useState('');
-  const [nftImage, setNftImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [attributes, setAttributes] = useState([{ trait_type: '', value: '' }]);
-  
-  const [minting, setMinting] = useState(false);
-  const [mintStatus, setMintStatus] = useState('');
+  const [batchSize, setBatchSize] = useState(1);
+  const [price, setPrice] = useState('0.01');
 
+  // Stage Images & Thresholds
+  const [stageImages, setStageImages] = useState({
+    0: null, 1: null, 2: null, 3: null, 4: null
+  });
+  const [stagePreview, setStagePreview] = useState({
+    0: null, 1: null, 2: null, 3: null, 4: null
+  });
+  const [evolutionThresholds, setEvolutionThresholds] = useState({
+    0: 3,  // Seed -> Sprout
+    1: 5,  // Sprout -> Sapling  
+    2: 7,  // Sapling -> Bloom
+    3: 10, // Bloom -> Fruiting
+    4: 0   // Final stage
+  });
+
+  // --- Authorization and Connection ---
   const checkAuthorization = useCallback(async () => {
     setPageLoading(true);
     try {
-      const connection = await web3Service.checkConnection();
-      if (connection.connected) {
-        const acc = connection.account.toLowerCase();
-        setCurrentAccount(acc);
-        setIsAuthorized(acc === ADMIN_WALLET_ADDRESS);
-      } else {
-        setCurrentAccount(null);
-        setIsAuthorized(false);
+      if (typeof window.ethereum === 'undefined') {
+        addLog('MetaMask bulunamadı.', 'error');
+        return;
+      }
+      const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+      if (accounts.length > 0) {
+        const acc = accounts[0].toLowerCase();
+        setAccount(acc);
+        setIsAuthorized(acc === ADMIN_WALLET_ADDRESS.toLowerCase());
       }
     } catch (error) {
-      console.error("Yetki kontrol hatası:", error);
-      setCurrentAccount(null);
-      setIsAuthorized(false);
-    }
+      addLog(`Yetki kontrol hatası: ${error.message}`, 'error');
+    } finally {
     setPageLoading(false);
+    }
   }, []);
 
   useEffect(() => {
     checkAuthorization();
+    if (window.ethereum) {
+      window.ethereum.on('accountsChanged', checkAuthorization);
+    }
+    return () => {
+      if (window.ethereum) {
+        window.ethereum.removeListener('accountsChanged', checkAuthorization);
+      }
+    };
   }, [checkAuthorization]);
 
-  const handleImageChange = (e) => {
+  // --- Logger ---
+  const addLog = (message, type = 'info') => {
+    const timestamp = new Date().toLocaleTimeString();
+    setLogs(prevLogs => [{ timestamp, message, type }, ...prevLogs]);
+  };
+
+  // --- Image Handling ---
+  const handleImageChange = (stageIndex, e) => {
     const file = e.target.files[0];
     if (file) {
-      setNftImage(file);
+      setStageImages(prev => ({ ...prev, [stageIndex]: file }));
       const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result);
+      reader.onloadend = () => {
+        setStagePreview(prev => ({ ...prev, [stageIndex]: reader.result }));
+      };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleAttributeChange = (index, event) => {
-    const values = [...attributes];
-    values[index][event.target.name] = event.target.value;
-    setAttributes(values);
+  const handleThresholdChange = (stageIndex, value) => {
+    setEvolutionThresholds(prev => ({ 
+      ...prev, 
+      [stageIndex]: stageIndex === 4 ? 0 : Math.max(1, parseInt(value) || 1)
+    }));
   };
 
-  const addAttribute = () => setAttributes([...attributes, { trait_type: '', value: '' }]);
-  const removeAttribute = (index) => setAttributes(attributes.filter((_, i) => i !== index));
+  // --- Validation ---
+  const validateForm = () => {
+    if (!nftName.trim()) {
+      addLog('NFT adı gerekli!', 'error');
+      return false;
+    }
+    if (!nftDescription.trim()) {
+      addLog('NFT açıklaması gerekli!', 'error');
+      return false;
+    }
+    if (!stageImages[0]) {
+      addLog('En az Tohum aşaması için görsel yüklenmelidir!', 'error');
+      return false;
+    }
+    return true;
+  };
 
-  const handleSubmitMint = async (e) => {
+  // --- Main Process ---
+  const handleAdvancedMint = async (e) => {
     e.preventDefault();
-    if (!recipientAddress || !nftName || !nftDescription || !nftImage) {
-      setMintStatus('Hata: Lütfen tüm zorunlu alanları (Alıcı, İsim, Açıklama, Resim) doldurun.');
-      return;
-    }
-    if (!ethers.utils.isAddress(recipientAddress)) {
-      setMintStatus('Hata: Geçersiz alıcı cüzdan adresi.');
-      return;
-    }
-
-    setMinting(true);
-    setMintStatus('Yeni tohum hazırlanıyor ve Pinata\'ya yükleniyor...');
+    if (!isAuthorized || !validateForm()) return;
+    
+    setProcessing(true);
+    setLogs([]);
+    addLog(`🚀 Gelişmiş mint işlemi başlatıldı!`);
+    addLog(`📊 ${batchSize} adet "${nftName}" NFT'si mint edilecek, tanesi ${price} ETH.`);
 
     try {
-      if (!window.ethereum) throw new Error("MetaMask bulunamadı.");
       await window.ethereum.request({ method: 'eth_requestAccounts' });
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
 
-      setMintStatus('Resim Pinata\'ya yükleniyor...');
-      const imageUploadResult = await uploadFileToIPFS(nftImage);
-      if (!imageUploadResult.success || !imageUploadResult.ipfsHash) {
-        throw new Error(`Resim Pinata'ya yüklenemedi: ${imageUploadResult.error || 'IPFS hash alınamadı'}`);
-      }
-      const imageIpfsUrl = `ipfs://${imageUploadResult.ipfsHash}`;
+      const evolvingNFTContract = new ethers.Contract(EVOLVING_NFT_CONTRACT_ADDRESS, EVOLVING_NFT_ABI, signer);
+      const marketplaceContract = new ethers.Contract(MARKETPLACE_CONTRACT_ADDRESS, MARKETPLACE_ABI, signer);
+      const marketplacePrice = ethers.parseEther(price);
 
-      setMintStatus('Resim başarıyla yüklendi. Metadata oluşturuluyor...');
-      const finalAttributes = attributes.filter(attr => attr.trait_type.trim() !== '' && attr.value.trim() !== '');
-      const metadataUploadResult = await createAndUploadMetadata(
-        nftName,
-        nftDescription,
-        imageIpfsUrl,
-        finalAttributes
+      // Step 1: Upload all stage images to IPFS
+      addLog('📤 1. Adım: Görseller IPFS\'e yükleniyor...');
+      const stageURIs = {};
+      
+      for (let stage = 0; stage <= 4; stage++) {
+        if (stageImages[stage]) {
+          addLog(`   📷 ${STAGE_NAMES[stage]} görseli yükleniyor...`);
+          const imageResult = await uploadFileToIPFS(stageImages[stage]);
+          if (!imageResult.success) {
+            throw new Error(`${STAGE_NAMES[stage]} görseli yüklenemedi: ${imageResult.error}`);
+          }
+          
+          // Create metadata for this stage
+          const metadata = {
+            name: `${nftName} - ${STAGE_NAMES[stage]}`,
+            description: `${nftDescription} - ${STAGE_DESCRIPTIONS[stage]}`,
+            image: `ipfs://${imageResult.ipfsHash}`,
+            attributes: [
+              { trait_type: "Stage", value: STAGE_NAMES[stage] },
+              { trait_type: "Stage Number", value: stage },
+              { trait_type: "Evolution Threshold", value: evolutionThresholds[stage] || 0 }
+            ]
+          };
+
+          const metadataResult = await createAndUploadMetadata(
+            metadata.name,
+            metadata.description, 
+            metadata.image,
+            metadata.attributes
       );
 
-      if (!metadataUploadResult.success || !metadataUploadResult.ipfsHash) {
-        throw new Error(`Metadata Pinata'ya yüklenemedi: ${metadataUploadResult.error || 'IPFS hash alınamadı'}`);
+          if (!metadataResult.success) {
+            throw new Error(`${STAGE_NAMES[stage]} metadata'sı yüklenemedi: ${metadataResult.error}`);
       }
-      const metadataTokenUri = `ipfs://${metadataUploadResult.ipfsHash}`;
-      
-      setMintStatus('Metadata başarıyla oluşturuldu. Tohum NFT mint ediliyor...');
-      const seedNFTContract = new ethers.Contract(SEED_NFT_CONTRACT_ADDRESS, SeedNFT_ABI.abi, signer);
-      const tx = await seedNFTContract.mintSeed(recipientAddress, metadataTokenUri);
-      
-      setMintStatus(`İşlem gönderildi: ${tx.hash}. Zincir üzerinde onay bekleniyor...`);
-      await tx.wait();
 
-      setMintStatus(`🌱 Tohum NFT başarıyla mint edildi! Alıcı: ${recipientAddress}, URI: ${metadataTokenUri}`);
-      setRecipientAddress('');
-      setNftName('');
-      setNftDescription('');
-      setNftImage(null);
-      setImagePreview(null);
-      setAttributes([{ trait_type: '', value: '' }]);
+          stageURIs[stage] = `ipfs://${metadataResult.ipfsHash}`;
+          addLog(`   ✅ ${STAGE_NAMES[stage]} başarıyla yüklendi!`, 'success');
+        } else if (stage === 0) {
+          throw new Error('Tohum aşaması görseli zorunludur!');
+        } else {
+          // Use placeholder for missing stages
+          stageURIs[stage] = `ipfs://placeholder-${stage}`;
+          addLog(`   ⚠️ ${STAGE_NAMES[stage]} görseli yok, placeholder kullanılıyor.`, 'warning');
+        }
+      }
+
+      // Step 2: Approve Marketplace
+      addLog('🔐 2. Adım: Marketplace onayı veriliyor...');
+      const approvalTx = await evolvingNFTContract.setApprovalForAll(MARKETPLACE_CONTRACT_ADDRESS, true);
+      await approvalTx.wait();
+      addLog('✅ Marketplace onaylandı!', 'success');
+
+      // Step 3: Mint, Setup, and List NFTs
+      addLog(`🌱 3. Adım: ${batchSize} adet NFT mint ediliyor ve listeleniyor...`);
+      
+      for (let i = 0; i < batchSize; i++) {
+        const currentNum = i + 1;
+        addLog(`--- NFT ${currentNum}/${batchSize} işleniyor... ---`);
+
+        // 3.1 Mint
+        addLog(`   ${currentNum}.1: Tohum NFT mint ediliyor...`);
+        const mintTx = await evolvingNFTContract.mintNFT(account, stageURIs[0]);
+        const mintReceipt = await mintTx.wait();
+        
+        // Get token ID from Transfer event
+        const mintEvent = mintReceipt.logs.map(log => {
+          try {
+            const iface = new ethers.Interface(EVOLVING_NFT_ABI);
+            return iface.parseLog(log);
+          } catch {
+            return null;
+          }
+        }).find(parsedLog => parsedLog?.name === 'Transfer');
+
+        if (!mintEvent) throw new Error("Token ID bulunamadı!");
+        const tokenId = mintEvent.args.tokenId.toString();
+        addLog(`   ✅ Token ID ${tokenId} mint edildi!`, 'success');
+
+        // 3.2 Setup Evolution Stages
+        addLog(`   ${currentNum}.2: Evrim aşamaları ayarlanıyor...`);
+        for (let stage = 1; stage <= 4; stage++) {
+          if (stageURIs[stage]) {
+            await evolvingNFTContract.setStageDetails(
+              tokenId, 
+              stage, 
+              stageURIs[stage], 
+              evolutionThresholds[stage-1] || 0
+            );
+          }
+        }
+        addLog(`   ✅ Tüm aşamalar ayarlandı!`, 'success');
+
+        // 3.3 List on Marketplace
+        addLog(`   ${currentNum}.3: Marketplace'te listeleniyor...`);
+        const listTx = await marketplaceContract.listNFT(EVOLVING_NFT_CONTRACT_ADDRESS, tokenId, marketplacePrice);
+        await listTx.wait();
+        addLog(`   ✅ ${price} ETH fiyatıyla listelendi!`, 'success');
+      }
+
+      addLog('🎉🎉🎉 TÜM İŞLEMLER BAŞARIYLA TAMAMLANDI!', 'success');
+      addLog(`🛍️ ${batchSize} adet "${nftName}" NFT'si marketplace'te satışa çıkarıldı!`, 'success');
 
     } catch (error) {
-      console.error("Tohum NFT mint etme hatası:", error);
-      setMintStatus(`Hata: ${error.message || 'Bilinmeyen bir hata oluştu.'}`);
+      console.error(error);
+      addLog(`❌ HATA: ${error.message}`, 'error');
     } finally {
-      setMinting(false);
+      setProcessing(false);
     }
   };
 
+  // --- Reset Form ---
+  const resetForm = () => {
+    setNftName('');
+    setNftDescription('');
+    setBatchSize(1);
+    setPrice('0.01');
+    setStageImages({ 0: null, 1: null, 2: null, 3: null, 4: null });
+    setStagePreview({ 0: null, 1: null, 2: null, 3: null, 4: null });
+    setEvolutionThresholds({ 0: 3, 1: 5, 2: 7, 3: 10, 4: 0 });
+    setLogs([]);
+  };
+
+  // --- Render Logic ---
   if (pageLoading) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
-        <p className="text-foreground text-lg">Yetki kontrol ediliyor, lütfen bekleyin...</p>
-        <div className="mt-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary-accent border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
-      </div>
-    );
-  }
-
-  if (!currentAccount) {
-    return (
-      <div className="container mx-auto px-4 py-12 text-center">
-        <div className="bg-secondary-accent p-8 rounded-xl shadow-lg max-w-md mx-auto">
-            <h2 className="text-2xl font-bold text-foreground mb-4">🔒 Admin Erişimi</h2>
-            <p className="text-foreground text-opacity-80 dark:text-opacity-90 mb-6">Bu sayfaya erişmek için lütfen admin cüzdanınızı bağlayın.</p>
-        </div>
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary-accent border-r-transparent"></div>
       </div>
     );
   }
@@ -154,104 +282,168 @@ export default function AdminPage() {
   if (!isAuthorized) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
-        <div className="bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-6 py-4 rounded-lg shadow-md max-w-md mx-auto">
+        <div className="bg-red-100 dark:bg-red-900/30 border border-red-400 text-red-700 dark:text-red-300 p-6 rounded-lg max-w-md mx-auto">
             <h2 className="text-xl font-bold mb-2">🚫 Yetkisiz Erişim!</h2>
-            <p>Bu sayfayı görüntüleme yetkiniz bulunmamaktadır.</p>
+          <p>Bu sayfayı sadece Admin görüntüleyebilir.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8 text-foreground text-center">🧑‍🌾 Admin Paneli - Yeni Tohum Ek</h1>
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold text-foreground mb-2">🧑‍🌾 Gelişmiş Admin Paneli</h1>
+        <p className="text-foreground/70">5 Aşamalı Evolution NFT Mint & Marketplace Sistemi</p>
+      </div>
       
-      <form onSubmit={handleSubmitMint} className="bg-secondary-accent shadow-xl rounded-lg px-6 md:px-8 pt-6 pb-8 mb-4 max-w-2xl mx-auto space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* MAIN FORM - 2 columns */}
+        <div className="lg:col-span-2 space-y-8">
+          
+          {/* Basic Info */}
+          <div className="bg-secondary-accent rounded-lg p-6 shadow-lg">
+            <h2 className="text-xl font-semibold text-foreground mb-4">📝 Temel Bilgiler</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="recipientAddress" className="block text-sm font-medium text-foreground mb-1">Alıcı Cüzdan Adresi *</label>
-          <input type="text" id="recipientAddress" value={recipientAddress} onChange={(e) => setRecipientAddress(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 bg-background border border-primary-accent/50 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-primary-accent focus:border-primary-accent sm:text-sm placeholder:text-foreground/50"
-            placeholder="0x..." required />
+                <label className="block text-sm font-medium text-foreground mb-1">NFT Adı *</label>
+                <input
+                  type="text"
+                  value={nftName}
+                  onChange={(e) => setNftName(e.target.value)}
+                  className="w-full px-3 py-2 bg-background border border-primary-accent/50 rounded-md"
+                  placeholder="Örn: Sihirli Ayçiçeği"
+                  required
+                />
         </div>
-
         <div>
-          <label htmlFor="nftName" className="block text-sm font-medium text-foreground mb-1">Tohum Adı *</label>
-          <input type="text" id="nftName" value={nftName} onChange={(e) => setNftName(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 bg-background border border-primary-accent/50 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-primary-accent focus:border-primary-accent sm:text-sm placeholder:text-foreground/50"
-            placeholder="Örn: Kadife Çiçeği Tohumu" required />
+                <label className="block text-sm font-medium text-foreground mb-1">Açıklama *</label>
+                <textarea
+                  value={nftDescription}
+                  onChange={(e) => setNftDescription(e.target.value)}
+                  className="w-full px-3 py-2 bg-background border border-primary-accent/50 rounded-md"
+                  placeholder="Bu NFT'nin hikayesi..."
+                  rows="3"
+                  required
+                />
         </div>
-
         <div>
-          <label htmlFor="nftDescription" className="block text-sm font-medium text-foreground mb-1">Tohum Açıklaması *</label>
-          <textarea id="nftDescription" value={nftDescription} onChange={(e) => setNftDescription(e.target.value)} rows="3"
-            className="mt-1 block w-full px-3 py-2 bg-background border border-primary-accent/50 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-primary-accent focus:border-primary-accent sm:text-sm placeholder:text-foreground/50"
-            placeholder="Bu tohumun özellikleri, hikayesi..." required />
+                <label className="block text-sm font-medium text-foreground mb-1">Mint Sayısı</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={batchSize}
+                  onChange={(e) => setBatchSize(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-full px-3 py-2 bg-background border border-primary-accent/50 rounded-md"
+                />
         </div>
-
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">Tohum Resmi *</label>
-          <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-primary-accent/50 border-dashed rounded-md hover:border-primary-accent transition-colors">
-            <div className="space-y-1 text-center">
-              {imagePreview ? (
-                <img src={imagePreview} alt="Önizleme" className="mx-auto h-40 w-auto rounded-md shadow" />
-              ) : (
-                <svg className="mx-auto h-12 w-12 text-primary-accent/70" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                  <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
-              <div className="flex text-sm text-foreground/80">
-                <label htmlFor="file-upload" className="relative cursor-pointer bg-background rounded-md font-medium text-primary-accent hover:text-primary-accent/80 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-background focus-within:ring-primary-accent px-2 py-1">
-                  <span>Resim Yükle</span>
-                  <input id="file-upload" name="file-upload" type="file" className="sr-only" onChange={handleImageChange} accept="image/*" />
-                </label>
-                <p className="pl-1">veya sürükleyip bırakın</p>
+                <label className="block text-sm font-medium text-foreground mb-1">Satış Fiyatı (ETH)</label>
+                <input
+                  type="text"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  className="w-full px-3 py-2 bg-background border border-primary-accent/50 rounded-md"
+                />
               </div>
-              <p className="text-xs text-foreground/60">PNG, JPG, GIF (Max 10MB)</p>
             </div>
           </div>
+
+          {/* Stage Images & Evolution */}
+          <div className="bg-secondary-accent rounded-lg p-6 shadow-lg">
+            <h2 className="text-xl font-semibold text-foreground mb-4">🖼️ Aşama Görselleri & Evrim Eşikleri</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {[0, 1, 2, 3, 4].map(stageIndex => (
+                <div key={stageIndex} className="bg-background/50 rounded-lg p-4">
+                  <h3 className="font-semibold text-foreground mb-2">
+                    {STAGE_NAMES[stageIndex]} {stageIndex === 0 && '*'}
+                  </h3>
+                  
+                  {/* Image Upload */}
+                  <div className="border-2 border-dashed border-primary-accent/50 rounded-lg p-3 mb-3 hover:border-primary-accent transition-colors">
+                    {stagePreview[stageIndex] ? (
+                      <img 
+                        src={stagePreview[stageIndex]} 
+                        alt={STAGE_NAMES[stageIndex]}
+                        className="w-full h-32 object-cover rounded-md mb-2"
+                      />
+                    ) : (
+                      <div className="h-32 flex items-center justify-center text-foreground/50">
+                        <span className="text-4xl">📷</span>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageChange(stageIndex, e)}
+                      className="w-full text-xs text-foreground/70"
+                      required={stageIndex === 0}
+                    />
         </div>
         
+                  {/* Evolution Threshold */}
+                  {stageIndex < 4 && (
         <div>
-          <h3 className="text-md font-medium text-foreground mb-2">Özellikler (Attributes)</h3>
-          {attributes.map((attribute, index) => (
-            <div key={index} className="flex items-center space-x-2 mb-2">
-              <input type="text" name="trait_type" placeholder="Özellik Adı (örn: Nadirlik)" value={attribute.trait_type} onChange={event => handleAttributeChange(index, event)}
-                className="block w-1/2 px-3 py-2 bg-background border border-primary-accent/50 rounded-md shadow-sm sm:text-sm focus:outline-none focus:ring-1 focus:ring-primary-accent placeholder:text-foreground/50" />
-              <input type="text" name="value" placeholder="Değer (örn: Çok Nadir)" value={attribute.value} onChange={event => handleAttributeChange(index, event)}
-                className="block w-1/2 px-3 py-2 bg-background border border-primary-accent/50 rounded-md shadow-sm sm:text-sm focus:outline-none focus:ring-1 focus:ring-primary-accent placeholder:text-foreground/50" />
-              {attributes.length > 1 && (
-                <button type="button" onClick={() => removeAttribute(index)} 
-                  className="text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-500 p-1 rounded-full text-sm font-bold">✖</button>
+                      <label className="block text-xs font-medium text-foreground/80 mb-1">
+                        Sonraki aşama için sulama
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={evolutionThresholds[stageIndex]}
+                        onChange={(e) => handleThresholdChange(stageIndex, e.target.value)}
+                        className="w-full px-2 py-1 text-sm bg-background border border-primary-accent/30 rounded"
+                      />
+                    </div>
               )}
             </div>
           ))}
-          <button type="button" onClick={addAttribute}
-            className="mt-2 text-sm text-primary-accent hover:text-primary-accent/80 font-medium py-1.5 px-3 border border-primary-accent/70 rounded-md hover:bg-primary-accent/10 transition-colors">
-            + Özellik Ekle
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-4">
+            <button
+              onClick={handleAdvancedMint}
+              disabled={processing}
+              className="flex-1 bg-primary-accent text-background font-bold py-4 px-6 rounded-lg hover:brightness-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3"
+            >
+              {processing && <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"></div>}
+              <span>{processing ? 'İşlem Sürüyor...' : '🚀 Gelişmiş Mint & Liste'}</span>
+            </button>
+            <button
+              onClick={resetForm}
+              disabled={processing}
+              className="bg-gray-500 text-white font-medium py-4 px-6 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
+            >
+              🔄 Sıfırla
           </button>
+          </div>
         </div>
 
-        <div className="pt-4">
-          <button type="submit" disabled={minting}
-            className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-semibold text-background bg-primary-accent hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-secondary-accent focus:ring-primary-accent disabled:opacity-70 disabled:cursor-not-allowed transition-all">
-            {minting ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-background" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Tohum Ekiliyor...
-                </>
-              ) : 'Tohumu Mint Et'}
-          </button>
+        {/* LOG PANEL - 1 column */}
+        <div className="bg-secondary-accent rounded-lg p-6 shadow-lg">
+          <h2 className="text-xl font-semibold text-foreground mb-4">📋 İşlem Kayıtları</h2>
+          <div className="bg-background/50 rounded-md p-4 h-96 overflow-y-auto space-y-2 text-sm">
+            {logs.length === 0 ? (
+              <p className="text-foreground/50 italic text-center mt-10">İşlem başladığında kayıtlar burada görünecek...</p>
+            ) : (
+              logs.map((log, i) => (
+                <div key={i} className={`flex items-start space-x-2 ${
+                  log.type === 'error' ? 'text-red-400' : 
+                  log.type === 'success' ? 'text-green-400' : 
+                  log.type === 'warning' ? 'text-yellow-400' :
+                  'text-foreground/80'
+                }`}>
+                  <span className="font-mono text-xs text-foreground/50 min-w-max">{log.timestamp}</span>
+                  <p className="break-words">{log.message}</p>
+                </div>
+              ))
+            )}
+          </div>
         </div>
-
-        {mintStatus && (
-          <p className={`mt-4 text-sm text-center font-medium ${mintStatus.startsWith('Hata:') ? 'text-red-600 dark:text-red-400' : 'text-primary-accent dark:text-dark-primary'}`}>
-            {mintStatus}
-          </p>
-        )}
-      </form>
+      </div>
     </div>
   );
 } 

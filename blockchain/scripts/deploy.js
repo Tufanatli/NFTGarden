@@ -18,40 +18,24 @@ async function main() {
   const marketplaceAddress = await marketplace.getAddress();
   console.log("Marketplace kontratı adresi:", marketplaceAddress);
 
-  console.log("\n--- Deploying Garden Contracts ---");
+  console.log("\n--- Deploying Evolving NFT Contract ---");
 
-  // 1. PlantNFT kontratını deploy et
-  const PlantNFT = await ethers.getContractFactory("PlantNFT");
-  console.log("Deploying PlantNFT...");
-  // Constructor: initialOwner, name, symbol
-  const plantNFT = await PlantNFT.deploy(deployer.address, "NFT Garden Plant", "PLANT");
-  await plantNFT.waitForDeployment();
-  const plantNFTAddress = await plantNFT.getAddress();
-  console.log("PlantNFT deployed to:", plantNFTAddress);
-
-  // 2. SeedNFT kontratını deploy et
-  const SeedNFT = await ethers.getContractFactory("SeedNFT");
-  console.log("Deploying SeedNFT...");
-  // Constructor: initialOwner, name, symbol, plantNFTContractAddress
-  const seedNFT = await SeedNFT.deploy(deployer.address, "NFT Garden Seed", "SEED", plantNFTAddress);
-  await seedNFT.waitForDeployment();
-  const seedNFTAddress = await seedNFT.getAddress();
-  console.log("SeedNFT deployed to:", seedNFTAddress);
-
-  // 3. PlantNFT sözleşmesinde setSeedNFTContract fonksiyonunu çağır
-  console.log("Setting SeedNFT contract address in PlantNFT...");
-  const tx = await plantNFT.connect(deployer).setSeedNFTContract(seedNFTAddress);
-  await tx.wait(); // İşlemin tamamlanmasını bekle
-  console.log("SeedNFT contract address set in PlantNFT contract.");
-  console.log("--- Garden Contracts Deployed Successfully ---");
+  // EvolvingNFT kontratını deploy et
+  const EvolvingNFT = await ethers.getContractFactory("EvolvingNFT");
+  console.log("Deploying EvolvingNFT...");
+  // Constructor: initialOwner
+  const evolvingNFT = await EvolvingNFT.deploy(deployer.address);
+  await evolvingNFT.waitForDeployment();
+  const evolvingNFTAddress = await evolvingNFT.getAddress();
+  console.log("EvolvingNFT deployed to:", evolvingNFTAddress);
+  console.log("--- EvolvingNFT Contract Deployed Successfully ---");
 
   // İleride frontend'de kullanmak üzere bu adresleri ve ABI'ları bir yere kaydetmeniz gerekecek.
   // Örneğin bir JSON dosyasına veya frontend config dosyasına.
-  // console.log("\n--- Contract Addresses for Frontend ---");
-  // console.log(`export const nftAddress = "${nftAddress}";`);
-  // console.log(`export const marketplaceAddress = "${marketplaceAddress}";`);
-  // console.log(`export const plantNFTAddress = "${plantNFTAddress}";`);
-  // console.log(`export const seedNFTAddress = "${seedNFTAddress}";`);
+  console.log("\n--- Contract Addresses for Frontend ---");
+  console.log(`export const nftAddress = "${nftAddress}";`);
+  console.log(`export const marketplaceAddress = "${marketplaceAddress}";`);
+  console.log(`export const evolvingNFTAddress = "${evolvingNFTAddress}";`);
 }
 
 main().catch((error) => {

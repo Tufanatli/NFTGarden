@@ -7,13 +7,48 @@ import Link from 'next/link';
 
 export default function Home() {
   const [listings, setListings] = useState([]);
+  const [filteredListings, setFilteredListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [account, setAccount] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [priceFilter, setPriceFilter] = useState('all');
+  const [stageFilters, setStageFilters] = useState([]);
+  const [priceRange, setPriceRange] = useState([0, 1]);
+  const [maxPrice, setMaxPrice] = useState(1);
+  const [sortBy, setSortBy] = useState('newest');
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [selectedNFT, setSelectedNFT] = useState(null);
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     loadListings();
     checkConnection();
   }, []);
+
+  useEffect(() => {
+    applyFilters();
+  }, [listings, searchTerm, priceFilter, stageFilters, priceRange, sortBy]);
+
+  useEffect(() => {
+    if (listings.length > 0) {
+      calculateMaxPrice();
+    }
+  }, [listings]);
+
+  const calculateMaxPrice = () => {
+    const prices = listings.map(listing => parseFloat(listing.price)).filter(price => !isNaN(price));
+    if (prices.length > 0) {
+      const max = Math.max(...prices);
+      const buffer = max * 0.1; // 10% buffer üstüne
+      const newMaxPrice = Math.ceil((max + buffer) * 100) / 100; // 2 decimal places
+      setMaxPrice(newMaxPrice);
+      
+      // Eğer mevcut priceRange max'ı eski maxPrice ise, yeni maxPrice'a güncelle
+      if (priceRange[1] === 1) {
+        setPriceRange([priceRange[0], newMaxPrice]);
+      }
+    }
+  };
 
   const checkConnection = async () => {
     const result = await web3Service.checkConnection();
@@ -27,6 +62,7 @@ export default function Home() {
     try {
       const result = await web3Service.getActiveListings();
       if (result.success) {
+        console.log('📋 Loaded listings:', result.listings); // Debug için
         setListings(result.listings);
       } else {
         console.error('Listing yükleme hatası:', result.error);
@@ -37,117 +73,466 @@ export default function Home() {
     setLoading(false);
   };
 
-  const handleBuy = async (listingId, price) => {
-    try {
-      if (!account) {
-        alert('Lütfen önce cüzdanınızı bağlayın');
-        return;
-      }
+  const applyFilters = () => {
+    let filtered = [...listings];
 
-      const result = await web3Service.buyNFT(listingId, price);
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(listing => 
+        listing.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        listing.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Multi-stage filter
+    if (stageFilters.length > 0) {
+      filtered = filtered.filter(listing => {
+        // Assume stage info is in NFT metadata or description
+        const stage = listing.stage || 0; // Default to stage 0 if not specified
+        return stageFilters.includes(stage);
+      });
+    }
+
+    // Price range filter
+    filtered = filtered.filter(listing => {
+      const price = parseFloat(listing.price);
+      return price >= priceRange[0] && price <= priceRange[1];
+    });
+
+    // Legacy price filter (if needed)
+    if (priceFilter !== 'all') {
+      switch (priceFilter) {
+        case 'low':
+          filtered = filtered.filter(listing => parseFloat(listing.price) < 0.05);
+          break;
+        case 'medium':
+          filtered = filtered.filter(listing => 
+            parseFloat(listing.price) >= 0.05 && parseFloat(listing.price) < 0.1
+          );
+          break;
+        case 'high':
+          filtered = filtered.filter(listing => parseFloat(listing.price) >= 0.1);
+          break;
+      }
+    }
+
+    // Sort
+    switch (sortBy) {
+      case 'price-low':
+        filtered.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+        break;
+      case 'price-high':
+        filtered.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+        break;
+      case 'newest':
+      default:
+        filtered.sort((a, b) => parseInt(b.listingId) - parseInt(a.listingId));
+        break;
+    }
+
+    setFilteredListings(filtered);
+  };
+
+  const handleBuyClick = (listingId, price) => {
+    console.log('🛒 Buy click params:', { listingId, price }); // Debug için
+    
+    // Find the full listing object from listings array
+    const fullListing = listings.find(listing => listing.listingId === listingId);
+    console.log('📋 Found full listing:', fullListing); // Debug için
+    
+    if (fullListing) {
+      setSelectedNFT(fullListing);
+      setShowPurchaseModal(true);
+    } else {
+      alert('❌ Listing bulunamadı!');
+      }
+  };
+
+  const handleConfirmPurchase = async () => {
+    if (!selectedNFT || !account) return;
+    
+    console.log('💳 Confirming purchase for:', selectedNFT); // Debug için
+    
+    setProcessing(true);
+    try {
+      const result = await web3Service.buyNFT(selectedNFT.listingId, selectedNFT.price);
       if (result.success) {
-        alert('NFT başarıyla satın alındı!');
-        loadListings(); // Listeyi yenile
+        alert('🎉 NFT başarıyla satın alındı!');
+        setShowPurchaseModal(false);
+        setSelectedNFT(null);
+        loadListings(); // Refresh listings
       } else {
-        alert('Satın alma başarısız: ' + result.error);
+        alert('❌ Satın alma başarısız: ' + result.error);
       }
     } catch (error) {
       console.error('Satın alma hatası:', error);
-      alert('Bir hata oluştu: ' + error.message);
+      alert('❌ Bir hata oluştu: ' + error.message);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleStageToggle = (stageNumber) => {
+    setStageFilters(prev => {
+      if (prev.includes(stageNumber)) {
+        return prev.filter(stage => stage !== stageNumber);
+      } else {
+        return [...prev, stageNumber];
+      }
+    });
+  };
+
+  const connectWallet = async () => {
+    const result = await web3Service.connectWallet();
+    if (result.success) {
+      setAccount(result.account);
+    } else {
+      alert('Cüzdan bağlanmadı: ' + result.error);
     }
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Hero Section */}
-      <div className="text-center mb-12 py-8 md:py-12">
-        <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-4">
-          NFT <span className="text-primary-accent">Garden</span>
-        </h1>
-        <p className="text-xl text-foreground text-opacity-80 dark:text-opacity-90 max-w-2xl mx-auto">
-          Kişisel NFT bahçenizde benzersiz dijital varlıkları keşfedin, büyütün ve takas edin.
-        </p>
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
+      {/* Header */}
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold text-foreground mb-3">🌱 NFT Garden Marketplace</h1>
+        <p className="text-foreground/70 text-lg">Evrimleşen NFT'leri keşfedin ve satın alın</p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        <div className="bg-secondary-accent rounded-xl p-6 text-center shadow-lg">
-          <div className="text-3xl font-bold text-primary-accent mb-2">{listings.length}</div>
-          <div className="text-foreground text-opacity-80 dark:text-opacity-90">Aktif Listing</div>
+      {/* Connection Status */}
+      {!account && (
+        <div className="bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-400 text-yellow-700 dark:text-yellow-300 p-4 rounded-lg mb-6 text-center">
+          <p className="mb-3">💡 NFT satın almak için cüzdanınızı bağlayın</p>
+          <button 
+            onClick={connectWallet}
+                              className="btn-primary hover:scale-105"
+          >
+            🔗 Cüzdan Bağla
+          </button>
         </div>
-        <div className="bg-secondary-accent rounded-xl p-6 text-center shadow-lg">
-          <div className="text-3xl font-bold text-primary-accent mb-2">
-            {listings.reduce((total, nft) => total + parseFloat(nft.price), 0).toFixed(2)}
+      )}
+
+      {/* Filters & Search */}
+      <div className="bg-secondary-accent rounded-lg p-6 mb-8 shadow-lg">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">🔍 Arama</label>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="NFT adı veya açıklama..."
+              className="w-full px-3 py-2 bg-background border border-primary-accent/50 rounded-md focus:ring-2 focus:ring-primary-accent focus:border-transparent"
+            />
           </div>
-          <div className="text-foreground text-opacity-80 dark:text-opacity-90">Toplam Değer (ETH)</div>
+          
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-3">🌱 Evrim Aşamaları</label>
+            <div className="space-y-2">
+              {[
+                { value: 0, label: '🌰 Tohum', color: 'bg-yellow-500' },
+                { value: 1, label: '🌱 Filiz', color: 'bg-green-400' },
+                { value: 2, label: '🌿 Fidan', color: 'bg-green-500' },
+                { value: 3, label: '🌸 Çiçek', color: 'bg-pink-500' },
+                { value: 4, label: '🍎 Meyve', color: 'bg-red-500' }
+              ].map(stage => (
+                <label key={stage.value} className="flex items-center cursor-pointer group">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={stageFilters.includes(stage.value)}
+                      onChange={() => handleStageToggle(stage.value)}
+                      className="sr-only"
+                    />
+                    <div className={`w-4 h-4 rounded border-2 border-primary-accent/50 flex items-center justify-center transition-colors ${
+                      stageFilters.includes(stage.value) 
+                        ? 'bg-primary-accent border-primary-accent' 
+                        : 'bg-background group-hover:border-primary-accent'
+                    }`}>
+                      {stageFilters.includes(stage.value) && (
+                        <svg className="w-3 h-3 text-background" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                  <span className="ml-3 text-sm text-foreground group-hover:text-primary-accent transition-colors">
+                    {stage.label}
+                  </span>
+                  <div className={`ml-auto w-3 h-3 rounded-full ${stage.color}`}></div>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">📊 Sıralama</label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="w-full px-3 py-2 bg-background border border-primary-accent/50 rounded-md focus:ring-2 focus:ring-primary-accent focus:border-transparent"
+            >
+              <option value="newest">En Yeni</option>
+              <option value="price-low">Fiyat: Düşük → Yüksek</option>
+              <option value="price-high">Fiyat: Yüksek → Düşük</option>
+            </select>
+          </div>
         </div>
-        <div className="bg-secondary-accent rounded-xl p-6 text-center shadow-lg">
-          <div className="text-3xl font-bold text-primary-accent mb-2">24</div>
-          <div className="text-foreground text-opacity-80 dark:text-opacity-90">Aktif Bahçıvan</div>
+
+        {/* Price Range Slider */}
+        <div className="mt-6 pt-6 border-t border-primary-accent/20">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-3">
+                💰 Fiyat Aralığı: {priceRange[0].toFixed(3)} - {priceRange[1].toFixed(3)} ETH
+              </label>
+              <div className="relative">
+                {/* Custom Range Slider */}
+                <div className="relative h-2 bg-background rounded-full">
+                  <div 
+                    className="absolute h-2 bg-gradient-to-r from-grow-green to-primary-accent rounded-full"
+                    style={{
+                      left: `${(priceRange[0] / maxPrice) * 100}%`,
+                      width: `${((priceRange[1] - priceRange[0]) / maxPrice) * 100}%`
+                    }}
+                  ></div>
+                </div>
+                
+                {/* Min Range Input */}
+                <input
+                  type="range"
+                  min="0"
+                  max={maxPrice}
+                  step="0.001"
+                  value={priceRange[0]}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value);
+                    if (value < priceRange[1]) {
+                      setPriceRange([value, priceRange[1]]);
+                    }
+                  }}
+                  className="absolute top-0 left-0 w-full h-2 bg-transparent appearance-none pointer-events-auto cursor-pointer range-slider"
+                />
+                
+                {/* Max Range Input */}
+                <input
+                  type="range"
+                  min="0"
+                  max={maxPrice}
+                  step="0.001"
+                  value={priceRange[1]}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value);
+                    if (value > priceRange[0]) {
+                      setPriceRange([priceRange[0], value]);
+                    }
+                  }}
+                  className="absolute top-0 left-0 w-full h-2 bg-transparent appearance-none pointer-events-auto cursor-pointer range-slider"
+                />
+              </div>
+              
+              {/* Quick Price Filters */}
+              <div className="flex gap-2 mt-3 flex-wrap">
+                <button
+                  onClick={() => setPriceRange([0, Math.min(0.05, maxPrice)])}
+                  className="px-3 py-1 text-xs bg-green-500/20 text-green-700 dark:text-green-300 rounded-full hover:bg-green-500/30 transition-colors"
+                >
+                  Düşük (&lt; 0.05)
+                </button>
+                <button
+                  onClick={() => setPriceRange([0.05, Math.min(0.1, maxPrice)])}
+                  className="px-3 py-1 text-xs bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 rounded-full hover:bg-yellow-500/30 transition-colors"
+                >
+                  Orta (0.05-0.1)
+                </button>
+                <button
+                  onClick={() => setPriceRange([0.1, maxPrice])}
+                  className="px-3 py-1 text-xs bg-red-500/20 text-red-700 dark:text-red-300 rounded-full hover:bg-red-500/30 transition-colors"
+                >
+                  Yüksek (&gt; 0.1)
+                </button>
+                <button
+                  onClick={() => setPriceRange([0, maxPrice])}
+                  className="px-3 py-1 text-xs bg-gray-500/20 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-500/30 transition-colors"
+                >
+                  Tümü
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <button 
+                onClick={loadListings}
+                disabled={loading}
+                                  className="w-full btn-primary disabled:opacity-50"
+              >
+                {loading ? '🔄' : '🔄'} Yenile
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="mt-4 pt-4 border-t border-primary-accent/20">
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-foreground/70">
+              📊 <strong>{filteredListings.length}</strong> NFT gösteriliyor 
+              ({listings.length} toplam)
+            </p>
+            
+            {/* Active Filters Indicator */}
+            {(searchTerm || stageFilters.length > 0 || (priceRange[0] > 0 || priceRange[1] < maxPrice)) && (
+              <div className="flex gap-2">
+                {searchTerm && (
+                  <span className="px-2 py-1 bg-blue-500/20 text-blue-700 dark:text-blue-300 rounded-full text-xs">
+                    🔍 Arama
+                  </span>
+                )}
+                {stageFilters.length > 0 && (
+                  <span className="px-2 py-1 bg-green-500/20 text-green-700 dark:text-green-300 rounded-full text-xs">
+                    🌱 {stageFilters.length} Aşama
+                  </span>
+                )}
+                {(priceRange[0] > 0 || priceRange[1] < maxPrice) && (
+                  <span className="px-2 py-1 bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 rounded-full text-xs">
+                    💰 Fiyat
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* NFT Grid */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-foreground mb-6">🌿 En Yeni Tohumlar ve Bitkiler</h2>
-        
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {[...Array(8)].map((_, index) => (
-              <div key={index} className="bg-secondary-accent rounded-xl shadow-lg overflow-hidden animate-pulse">
-                <div className="aspect-square bg-background opacity-50"></div>
-                <div className="p-6">
-                  <div className="h-6 bg-background opacity-50 rounded mb-2"></div>
-                  <div className="h-4 bg-background opacity-50 rounded mb-4"></div>
-                  <div className="h-10 bg-background opacity-50 rounded"></div>
+        <div className="text-center py-12">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary-accent border-r-transparent mb-4"></div>
+          <p className="text-foreground/70">NFT'ler yükleniyor...</p>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : listings.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {listings.map((nft) => (
+      ) : filteredListings.length > 0 ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4">
+          {filteredListings.map((listing) => (
               <NFTCard
-                key={nft.listingId}
-                nft={nft}
+              key={listing.listingId}
+              nft={listing}
                 isListed={true}
-                onBuy={handleBuy}
+              onBuy={handleBuyClick}
                 currentAccount={account}
               />
             ))}
           </div>
         ) : (
           <div className="text-center py-12 bg-secondary-accent rounded-xl shadow">
-            <div className="text-6xl mb-4">🪴</div>
-            <h3 className="text-xl font-semibold text-foreground mb-2">
-              Bahçede Henüz Hiçbir Şey Yok
+          <div className="text-6xl mb-4">🌿</div>
+          <h3 className="text-2xl font-semibold text-foreground mb-3">
+            {searchTerm || priceFilter !== 'all' || stageFilters.length > 0 || (priceRange[0] > 0 || priceRange[1] < maxPrice) ? 'Arama Kriterlerinize Uygun NFT Bulunamadı' : 'Henüz Satışta NFT Yok'}
             </h3>
-            <p className="text-foreground text-opacity-80 dark:text-opacity-90 mb-6">
-              İlk tohumunuzu ekip bahçenizi yeşertmeye başlayın!
-            </p>
-            <Link
-              href="/mint"
-              className="inline-block bg-primary-accent hover:brightness-95 text-background px-6 py-3 rounded-lg font-medium transition-colors"
+          <p className="text-foreground/70 mb-6 max-w-md mx-auto">
+            {searchTerm || priceFilter !== 'all' || stageFilters.length > 0 || (priceRange[0] > 0 || priceRange[1] < maxPrice)
+              ? 'Farklı arama terimleri deneyin veya filtreleri temizleyin.'
+              : 'Admin tarafından yeni NFT\'ler eklendiğinde burada görünecek.'
+            }
+          </p>
+          {(searchTerm || priceFilter !== 'all' || stageFilters.length > 0 || (priceRange[0] > 0 || priceRange[1] < maxPrice)) && (
+            <button 
+              onClick={() => {
+                setSearchTerm('');
+                setPriceFilter('all');
+                setStageFilters([]);
+                setPriceRange([0, maxPrice]);
+                setSortBy('newest');
+              }}
+              className="btn-primary hover:scale-105"
             >
-              Tohum Ek
-            </Link>
+              🔄 Filtreleri Temizle
+            </button>
+          )}
           </div>
         )}
-      </div>
 
-      {/* CTA Section */}
-      <div className="bg-primary-accent rounded-2xl p-8 md:p-12 text-center text-background">
-        <h2 className="text-3xl font-bold mb-4">Kendi NFT Bahçenizi Kurun</h2>
-        <p className="text-lg mb-6 opacity-90">
-          Eşsiz bitki NFT'leri yetiştirin ve dijital bahçenizi dünyaya sergileyin.
-        </p>
-        <Link
-          href="/mint"
-          className="inline-block bg-background text-primary-accent hover:bg-opacity-90 px-8 py-3 rounded-lg font-medium transition-colors"
-        >
-          Bahçeni Oluştur
+      {/* Quick Links */}
+      <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Link href="/my-nfts" className="group bg-secondary-accent p-6 rounded-lg shadow hover:shadow-lg transition-all">
+          <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">💎</div>
+          <h3 className="text-xl font-semibold text-foreground mb-2">NFT'lerim</h3>
+          <p className="text-foreground/70">Sahip olduğunuz NFT'leri görüntüleyin</p>
+        </Link>
+
+        <Link href="/garden/your-address" className="group bg-secondary-accent p-6 rounded-lg shadow hover:shadow-lg transition-all">
+          <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">🌺</div>
+          <h3 className="text-xl font-semibold text-foreground mb-2">Bahçem</h3>
+          <p className="text-foreground/70">NFT'lerinizi sulayın ve geliştirin</p>
+        </Link>
+
+        <Link href="/mint" className="group bg-secondary-accent p-6 rounded-lg shadow hover:shadow-lg transition-all">
+          <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">🌱</div>
+          <h3 className="text-xl font-semibold text-foreground mb-2">Mint</h3>
+          <p className="text-foreground/70">Yeni NFT oluşturun</p>
         </Link>
       </div>
+
+      {/* Purchase Confirmation Modal */}
+      {showPurchaseModal && selectedNFT && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-secondary-accent rounded-lg p-6 max-w-md w-full shadow-2xl">
+            <h3 className="text-xl font-bold text-foreground mb-4">🛒 Satın Alma Onayı</h3>
+            
+            <div className="bg-background/50 rounded-lg p-4 mb-4">
+              <p className="text-sm text-foreground/70 mb-1">NFT Adı:</p>
+              <p className="font-semibold text-foreground">{selectedNFT?.name || 'İsimsiz NFT'}</p>
+              
+              <p className="text-sm text-foreground/70 mb-1 mt-3">Fiyat:</p>
+              <p className="font-bold text-xl text-primary-accent">
+                {selectedNFT?.price ? `${selectedNFT.price} ETH` : 'Fiyat Belirlenmemiş'}
+              </p>
+              
+              <p className="text-sm text-foreground/70 mb-1 mt-3">Satıcı:</p>
+              <p className="font-mono text-sm text-foreground">
+                {selectedNFT?.seller ? 
+                  `${selectedNFT.seller.slice(0, 6)}...${selectedNFT.seller.slice(-4)}` : 
+                  'Bilinmeyen Satıcı'
+                }
+              </p>
+              
+              {/* Debug bilgileri */}
+              <div className="mt-3 p-2 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+                <p><strong>Debug:</strong></p>
+                <p>Listing ID: {selectedNFT?.listingId || 'N/A'}</p>
+                <p>Token ID: {selectedNFT?.tokenId || 'N/A'}</p>
+                <p>Contract: {selectedNFT?.contractAddress || 'N/A'}</p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowPurchaseModal(false);
+                  setSelectedNFT(null);
+                }}
+                disabled={processing}
+                className="flex-1 bg-gray-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-600 transition-colors disabled:opacity-50"
+              >
+                ❌ İptal
+              </button>
+              <button
+                onClick={handleConfirmPurchase}
+                disabled={processing}
+                                  className="flex-1 btn-success disabled:opacity-50 flex items-center justify-center hover:scale-105"
+              >
+                {processing ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin mr-2"></div>
+                    İşleniyor...
+                  </>
+                ) : (
+                  '✅ Satın Al'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

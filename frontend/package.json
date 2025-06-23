@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@react-three/drei": "^10.3.0",
+    "@react-three/fiber": "^9.1.2",
     "@supabase/supabase-js": "^2.49.8",
     "axios": "^1.9.0",
     "classnames": "^2.5.1",
@@ -16,6 +18,7 @@
     "next": "15.1.8",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "three": "^0.177.0",
     "web3modal": "^1.9.12"
   },
   "devDependencies": {
