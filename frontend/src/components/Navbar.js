@@ -95,6 +95,7 @@ export default function Navbar() {
           <div className="flex items-center space-x-1">
             {[
               { href: "/", label: "🏠 Ana Sayfa" },
+              { href: "/profiles", label: "👥 Profiller" },
               { href: "/mint", label: "🌱 Mint" },
               { href: "/my-nfts", label: "💎 NFT'lerim" },
               ...(account ? [{ href: `/profile/${account}`, label: "👤 Profilim" }] : []),

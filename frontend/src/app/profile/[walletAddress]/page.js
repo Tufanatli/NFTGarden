@@ -32,6 +32,8 @@ export default function ProfilePage() {
   const [backgroundImageFile, setBackgroundImageFile] = useState(null);
   const [backgroundImagePreview, setBackgroundImagePreview] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [isProfileShared, setIsProfileShared] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
 
   const setupWeb3 = useCallback(async () => {
     const connection = await web3Service.checkConnection();
@@ -52,6 +54,7 @@ export default function ProfilePage() {
         setBio(profile.bio || '');
         setProfileImagePreview(profile.profile_image_url);
         setBackgroundImagePreview(profile.profile_background_image_url);
+        setIsProfileShared(profile.is_shared || false);
       } else {
         // Eğer profil bulunamazsa ve bu kendi profilimizse, oluşturmayı deneyebiliriz veya bir mesaj gösterebiliriz.
         // Şimdilik, Navbar'da getOrCreateProfile çağrıldığı için burada null kalması bir sorun teşkil etmeyebilir.
@@ -224,9 +227,50 @@ export default function ProfilePage() {
         setBio(profileData.bio || '');
         setProfileImagePreview(profileData.profile_image_url);
         setBackgroundImagePreview(profileData.profile_background_image_url);
+        setIsProfileShared(profileData.is_shared || false);
     }
     setProfileImageFile(null);
     setBackgroundImageFile(null);
+  };
+
+  const handleShareProfile = async () => {
+    if (!isOwnProfile || !currentAccount) return;
+    setShareLoading(true);
+    
+    try {
+      const updates = {
+        is_shared: !isProfileShared,
+        shared_at: !isProfileShared ? new Date().toISOString() : null
+      };
+
+      const updatedProfile = await updateProfile(currentAccount, updates);
+      
+      if (updatedProfile) {
+        setIsProfileShared(!isProfileShared);
+        setProfileData({...profileData, ...updates});
+        alert(
+          !isProfileShared 
+            ? '🎉 Profiliniz artık toplulukta görünür! Diğer kullanıcılar sizi keşfedebilir.' 
+            : 'ℹ️ Profiliniz artık toplulukta gizli. Sadece direkt link ile erişilebilir.'
+        );
+      } else {
+        alert('Profil paylaşım durumu güncellenirken bir hata oluştu.');
+      }
+    } catch (error) {
+      console.error('Profil paylaşım hatası:', error);
+      alert('Bir hata oluştu: ' + error.message);
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
+  const copyProfileLink = () => {
+    const profileUrl = `${window.location.origin}/profile/${profileWalletAddress}`;
+    navigator.clipboard.writeText(profileUrl).then(() => {
+      alert('🔗 Profil linki kopyalandı! Artık arkadaşlarınızla paylaşabilirsiniz.');
+    }).catch(() => {
+      alert('📋 Link kopyalanamadı. URL: ' + profileUrl);
+    });
   };
 
   if (loading) {
@@ -346,16 +390,57 @@ export default function ProfilePage() {
 
           <div className="mt-6 md:mt-0 md:ml-auto flex-shrink-0 flex flex-col items-center md:items-end space-y-2 w-full md:w-auto">
             {isOwnProfile && !editMode && (
+              <div className="w-full md:w-auto space-y-2">
               <button onClick={() => setEditMode(true)} 
                 className="bg-primary-accent hover:brightness-95 text-background font-medium py-2 px-5 rounded-lg transition-colors shadow-md w-full md:w-auto">
-                Profili Düzenle
+                  ✏️ Profili Düzenle
+                </button>
+                
+                {/* Share Profile Button */}
+                <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+                  <button 
+                    onClick={handleShareProfile}
+                    disabled={shareLoading}
+                    className={`flex-1 font-medium py-2 px-4 rounded-lg transition-all shadow-md hover:scale-105 disabled:opacity-70 flex items-center justify-center ${
+                      isProfileShared 
+                        ? 'bg-green-600 hover:bg-green-700 text-white' 
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    }`}
+                  >
+                    {shareLoading ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    ) : (
+                      <span className="mr-2">{isProfileShared ? '🌐' : '👥'}</span>
+                    )}
+                    {shareLoading 
+                      ? 'Güncelleniyor...' 
+                      : isProfileShared 
+                        ? 'Toplulukta Paylaşıldı' 
+                        : 'Toplulukta Paylaş'
+                    }
+                  </button>
+                  
+                  <button 
+                    onClick={copyProfileLink}
+                    className="flex-1 md:flex-initial bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-all shadow-md hover:scale-105 flex items-center justify-center"
+                  >
+                    🔗 Link Kopyala
               </button>
+                </div>
+                
+                {isProfileShared && (
+                  <div className="text-xs text-green-600 dark:text-green-400 text-center md:text-right bg-green-100 dark:bg-green-900/30 rounded-lg px-3 py-2">
+                    ✅ Profiliniz toplulukta görünür
+                  </div>
+                )}
+              </div>
             )}
+            
             {isOwnProfile && editMode && (
               <div className="flex space-x-2 w-full md:w-auto">
                 <button onClick={handleCancelEdit} disabled={saving}
                   className="flex-1 bg-background/80 hover:bg-background text-foreground font-medium py-2 px-4 rounded-lg transition-colors shadow disabled:opacity-70">
-                  İptal
+                  ❌ İptal
                 </button>
                 <button onClick={handleSaveProfile} disabled={saving}
                   className="flex-1 bg-primary-accent hover:brightness-95 text-background font-medium py-2 px-4 rounded-lg transition-colors shadow-md disabled:opacity-70 flex items-center justify-center">
@@ -365,10 +450,23 @@ export default function ProfilePage() {
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
                   ) : null}
-                  {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+                  {saving ? 'Kaydediliyor...' : '💾 Değişiklikleri Kaydet'}
                 </button>
               </div>
             )}
+            
+            {/* Profile Actions for Non-Own Profiles */}
+            {!isOwnProfile && (
+              <div className="w-full md:w-auto space-y-2">
+                <button 
+                  onClick={copyProfileLink}
+                  className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-all shadow-md hover:scale-105 flex items-center justify-center"
+                >
+                  🔗 Profil Linkini Paylaş
+                </button>
+              </div>
+            )}
+            
              <Link href={`/garden/${profileWalletAddress}`} 
                 className="text-sm text-primary-accent hover:underline mt-2 text-center md:text-right w-full md:w-auto">
                 {isOwnProfile ? 'Bahçeme Git' : `${displayUsernameText}'in Bahçesine Git`} 🪴

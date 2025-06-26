@@ -212,10 +212,17 @@ export default function Home() {
         </div>
       )}
 
-      {/* Filters & Search */}
-      <div className="bg-secondary-accent rounded-lg p-6 mb-8 shadow-lg">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div>
+      {/* Main Layout: Sidebar + Content */}
+      <div className="flex gap-8">
+        {/* Left Sidebar - Filters */}
+        <div className="w-80 flex-shrink-0">
+          <div className="bg-secondary-accent rounded-lg p-6 shadow-lg sticky top-4">
+            <h2 className="text-lg font-semibold text-foreground mb-6 flex items-center">
+              🔍 Filtreler
+            </h2>
+            
+            {/* Search */}
+            <div className="mb-6">
             <label className="block text-sm font-medium text-foreground mb-2">🔍 Arama</label>
             <input
               type="text"
@@ -226,9 +233,10 @@ export default function Home() {
             />
           </div>
           
-          <div>
+            {/* Stage Filters */}
+            <div className="mb-6">
             <label className="block text-sm font-medium text-foreground mb-3">🌱 Evrim Aşamaları</label>
-            <div className="space-y-2">
+              <div className="space-y-3">
               {[
                 { value: 0, label: '🌰 Tohum', color: 'bg-yellow-500' },
                 { value: 1, label: '🌱 Filiz', color: 'bg-green-400' },
@@ -265,7 +273,8 @@ export default function Home() {
             </div>
           </div>
 
-          <div>
+            {/* Sort */}
+            <div className="mb-6">
             <label className="block text-sm font-medium text-foreground mb-2">📊 Sıralama</label>
             <select
               value={sortBy}
@@ -276,17 +285,14 @@ export default function Home() {
               <option value="price-low">Fiyat: Düşük → Yüksek</option>
               <option value="price-high">Fiyat: Yüksek → Düşük</option>
             </select>
-          </div>
         </div>
 
-        {/* Price Range Slider */}
-        <div className="mt-6 pt-6 border-t border-primary-accent/20">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
-            <div>
+            {/* Price Range */}
+            <div className="mb-6">
               <label className="block text-sm font-medium text-foreground mb-3">
                 💰 Fiyat Aralığı: {priceRange[0].toFixed(3)} - {priceRange[1].toFixed(3)} ETH
               </label>
-              <div className="relative">
+              <div className="relative mb-4">
                 {/* Custom Range Slider */}
                 <div className="relative h-2 bg-background rounded-full">
                   <div 
@@ -332,35 +338,36 @@ export default function Home() {
               </div>
               
               {/* Quick Price Filters */}
-              <div className="flex gap-2 mt-3 flex-wrap">
+              <div className="space-y-2">
                 <button
                   onClick={() => setPriceRange([0, Math.min(0.05, maxPrice)])}
-                  className="px-3 py-1 text-xs bg-green-500/20 text-green-700 dark:text-green-300 rounded-full hover:bg-green-500/30 transition-colors"
+                  className="w-full px-3 py-2 text-sm bg-green-500/20 text-green-700 dark:text-green-300 rounded-md hover:bg-green-500/30 transition-colors"
                 >
-                  Düşük (&lt; 0.05)
+                  Düşük (&lt; 0.05 ETH)
                 </button>
                 <button
                   onClick={() => setPriceRange([0.05, Math.min(0.1, maxPrice)])}
-                  className="px-3 py-1 text-xs bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 rounded-full hover:bg-yellow-500/30 transition-colors"
+                  className="w-full px-3 py-2 text-sm bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 rounded-md hover:bg-yellow-500/30 transition-colors"
                 >
-                  Orta (0.05-0.1)
+                  Orta (0.05-0.1 ETH)
                 </button>
                 <button
                   onClick={() => setPriceRange([0.1, maxPrice])}
-                  className="px-3 py-1 text-xs bg-red-500/20 text-red-700 dark:text-red-300 rounded-full hover:bg-red-500/30 transition-colors"
+                  className="w-full px-3 py-2 text-sm bg-red-500/20 text-red-700 dark:text-red-300 rounded-md hover:bg-red-500/30 transition-colors"
                 >
-                  Yüksek (&gt; 0.1)
+                  Yüksek (&gt; 0.1 ETH)
                 </button>
                 <button
                   onClick={() => setPriceRange([0, maxPrice])}
-                  className="px-3 py-1 text-xs bg-gray-500/20 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-500/30 transition-colors"
+                  className="w-full px-3 py-2 text-sm bg-gray-500/20 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-500/30 transition-colors"
                 >
-                  Tümü
+                  Tüm Fiyatlar
                 </button>
               </div>
             </div>
 
-            <div>
+            {/* Action Buttons */}
+            <div className="space-y-3">
               <button 
                 onClick={loadListings}
                 disabled={loading}
@@ -368,34 +375,47 @@ export default function Home() {
               >
                 {loading ? '🔄' : '🔄'} Yenile
               </button>
-            </div>
-          </div>
+              
+              {/* Clear Filters */}
+              {(searchTerm || stageFilters.length > 0 || (priceRange[0] > 0 || priceRange[1] < maxPrice)) && (
+                <button 
+                  onClick={() => {
+                    setSearchTerm('');
+                    setStageFilters([]);
+                    setPriceRange([0, maxPrice]);
+                    setSortBy('newest');
+                  }}
+                  className="w-full px-4 py-2 bg-gray-500/20 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-500/30 transition-colors"
+                >
+                  🔄 Filtreleri Temizle
+                </button>
+              )}
         </div>
 
         {/* Stats */}
-        <div className="mt-4 pt-4 border-t border-primary-accent/20">
-          <div className="flex justify-between items-center">
-            <p className="text-sm text-foreground/70">
+            <div className="mt-6 pt-4 border-t border-primary-accent/20">
+              <p className="text-sm text-foreground/70 text-center">
               📊 <strong>{filteredListings.length}</strong> NFT gösteriliyor 
-              ({listings.length} toplam)
+                <br />
+                <span className="text-xs">({listings.length} toplam)</span>
             </p>
             
             {/* Active Filters Indicator */}
             {(searchTerm || stageFilters.length > 0 || (priceRange[0] > 0 || priceRange[1] < maxPrice)) && (
-              <div className="flex gap-2">
+                <div className="mt-3 space-y-1">
                 {searchTerm && (
-                  <span className="px-2 py-1 bg-blue-500/20 text-blue-700 dark:text-blue-300 rounded-full text-xs">
-                    🔍 Arama
+                    <span className="block w-full px-2 py-1 bg-blue-500/20 text-blue-700 dark:text-blue-300 rounded text-xs text-center">
+                      🔍 Arama: "{searchTerm}"
                   </span>
                 )}
                 {stageFilters.length > 0 && (
-                  <span className="px-2 py-1 bg-green-500/20 text-green-700 dark:text-green-300 rounded-full text-xs">
-                    🌱 {stageFilters.length} Aşama
+                    <span className="block w-full px-2 py-1 bg-green-500/20 text-green-700 dark:text-green-300 rounded text-xs text-center">
+                      🌱 {stageFilters.length} Aşama Seçili
                   </span>
                 )}
                 {(priceRange[0] > 0 || priceRange[1] < maxPrice) && (
-                  <span className="px-2 py-1 bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 rounded-full text-xs">
-                    💰 Fiyat
+                    <span className="block w-full px-2 py-1 bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 rounded text-xs text-center">
+                      💰 Fiyat Filtresi Aktif
                   </span>
                 )}
               </div>
@@ -404,6 +424,8 @@ export default function Home() {
         </div>
       </div>
 
+                 {/* Right Content Area */}
+         <div className="flex-1 min-w-0">
       {/* NFT Grid */}
         {loading ? (
         <div className="text-center py-12">
@@ -411,7 +433,7 @@ export default function Home() {
           <p className="text-foreground/70">NFT'ler yükleniyor...</p>
                 </div>
       ) : filteredListings.length > 0 ? (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4">
+             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {filteredListings.map((listing) => (
               <NFTCard
               key={listing.listingId}
@@ -450,9 +472,17 @@ export default function Home() {
           )}
           </div>
         )}
+         </div>
+       </div>
 
       {/* Quick Links */}
-      <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Link href="/profiles" className="group bg-secondary-accent p-6 rounded-lg shadow hover:shadow-lg transition-all">
+          <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">👥</div>
+          <h3 className="text-xl font-semibold text-foreground mb-2">Profilleri Keşfet</h3>
+          <p className="text-foreground/70">Topluluk üyelerini keşfedin</p>
+        </Link>
+
         <Link href="/my-nfts" className="group bg-secondary-accent p-6 rounded-lg shadow hover:shadow-lg transition-all">
           <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">💎</div>
           <h3 className="text-xl font-semibold text-foreground mb-2">NFT'lerim</h3>
