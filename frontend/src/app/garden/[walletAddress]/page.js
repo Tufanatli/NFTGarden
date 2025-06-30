@@ -190,6 +190,64 @@ export default function GardenPage({ params }) {
     return stages[stage] || stages[0];
   };
 
+  // Stage-based renk teması belirleme
+  const getStageTheme = (stage) => {
+    const themes = [
+      {
+        name: 'seed',
+        gradient: 'from-amber-400 to-yellow-600',
+        bgGradient: 'from-amber-50 to-yellow-100 dark:from-amber-900/20 dark:to-yellow-900/20',
+        accent: 'text-amber-600 dark:text-amber-400',
+        border: 'border-amber-300 dark:border-amber-600',
+        glow: 'from-amber-400/30 to-yellow-600/30',
+        emoji: '🌰',
+        stage: 0
+      },
+      {
+        name: 'sprout',
+        gradient: 'from-lime-400 to-green-600',
+        bgGradient: 'from-lime-50 to-green-100 dark:from-lime-900/20 dark:to-green-900/20',
+        accent: 'text-lime-600 dark:text-lime-400',
+        border: 'border-lime-300 dark:border-lime-600',
+        glow: 'from-lime-400/30 to-green-600/30',
+        emoji: '🌱',
+        stage: 1
+      },
+      {
+        name: 'sapling',
+        gradient: 'from-green-400 to-emerald-600',
+        bgGradient: 'from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20',
+        accent: 'text-green-600 dark:text-green-400',
+        border: 'border-green-300 dark:border-green-600',
+        glow: 'from-green-400/30 to-emerald-600/30',
+        emoji: '🌿',
+        stage: 2
+      },
+      {
+        name: 'bloom',
+        gradient: 'from-pink-400 to-rose-600',
+        bgGradient: 'from-pink-50 to-rose-100 dark:from-pink-900/20 dark:to-rose-900/20',
+        accent: 'text-pink-600 dark:text-pink-400',
+        border: 'border-pink-300 dark:border-pink-600',
+        glow: 'from-pink-400/30 to-rose-600/30',
+        emoji: '🌸',
+        stage: 3
+      },
+      {
+        name: 'fruit',
+        gradient: 'from-red-400 to-rose-600',
+        bgGradient: 'from-red-50 to-rose-100 dark:from-red-900/20 dark:to-rose-900/20',
+        accent: 'text-red-600 dark:text-red-400',
+        border: 'border-red-300 dark:border-red-600',
+        glow: 'from-red-400/30 to-rose-600/30',
+        emoji: '🍎',
+        stage: 4
+      }
+    ];
+
+    return themes[stage] || themes[0];
+  };
+
   const getProgressPercentage = (stage, wateringCount, evolutionThreshold) => {
     if (stage >= 4) return 100; // Final stage
     if (!evolutionThreshold) return 0;
@@ -294,21 +352,31 @@ export default function GardenPage({ params }) {
           {gardenNFTs.map((nft) => {
             const details = nftDetails[nft.tokenId] || {};
             const stageInfo = getStageInfo(details.stage || 0);
+            const theme = getStageTheme(details.stage || 0);
             const progress = getProgressPercentage(details.stage || 0, details.wateringCount || 0, details.evolutionThreshold || 0);
             const wateringsNeeded = getNextEvolutionInfo(details.stage || 0, details.wateringCount || 0, details.evolutionThreshold || 0);
             const canWater = account.toLowerCase() === walletAddress.toLowerCase();
 
             return (
-              <div key={nft.tokenId} className="bg-secondary-accent rounded-xl shadow-lg overflow-hidden">
+              <div key={nft.tokenId} className={`relative bg-gradient-to-br ${theme.bgGradient} rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden border ${theme.border} group`}>
+                {/* Decorative Background Elements */}
+                <div className={`absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl ${theme.glow} rounded-full -translate-y-10 translate-x-10 opacity-50`}></div>
+                <div className={`absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr ${theme.glow} rounded-full translate-y-8 -translate-x-8 opacity-30`}></div>
+                
+                {/* Stage Emoji Decorator */}
+                <div className="absolute top-2 left-2 text-lg opacity-40 group-hover:opacity-60 transition-opacity z-10">
+                  {theme.emoji}
+                </div>
+
                 {/* NFT Image */}
-                <div className="aspect-square relative bg-gradient-to-br from-green-100 to-blue-100 dark:from-green-900 dark:to-blue-900">
+                <div className={`aspect-square relative ${theme.bgGradient}`}>
                   {details.imageUrl ? (
                     <Image
                       src={details.imageUrl}
                       alt={details.metadata?.name || `NFT #${nft.tokenId}`}
                       fill
                       sizes="400px"
-                      className="object-cover rounded-t-xl"
+                      className="object-cover rounded-t-2xl group-hover:scale-105 transition-transform duration-300"
                       onError={(e) => {
                         e.target.style.display = 'none';
                         e.target.nextSibling.style.display = 'flex';
@@ -325,23 +393,29 @@ export default function GardenPage({ params }) {
                   </div>
                   
                   {/* Stage Badge */}
-                  <div className="absolute top-2 left-2 bg-background/80 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium z-10">
+                  <div className={`absolute top-2 right-2 bg-gradient-to-r ${theme.gradient} text-white px-2 py-1 rounded-full text-xs font-medium z-10 shadow-md`}>
                     Aşama {(details.stage || 0) + 1}
                   </div>
                   
                   {/* Details Button */}
                   <button
                     onClick={() => openDetailsModal(nft)}
-                    className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm p-2 rounded-full hover:bg-background transition-colors z-10"
+                    className="absolute bottom-2 right-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-2 rounded-full hover:scale-110 transition-all z-10 shadow-md"
                   >
                     ℹ️
                   </button>
                 </div>
 
                 {/* NFT Info */}
-                <div className="p-4">
-                  <h3 className="font-semibold text-foreground mb-1 truncate">
-                    {nft.name || `NFT #${nft.tokenId}`}
+                <div className="p-4 relative z-10">
+                  <h3 className={`font-semibold ${theme.accent} mb-1 truncate group-hover:font-bold transition-all`}>
+                    {(() => {
+                      const rawName = nft.name || `NFT #${nft.tokenId}`;
+                      // Stage kısmını çıkar (örn: "Sarı Çiçek - 🌿 Fidan" -> "Sarı Çiçek")
+                      return rawName.includes(' - 🌰') || rawName.includes(' - 🌱') || rawName.includes(' - 🌿') || rawName.includes(' - 🌸') || rawName.includes(' - 🍎')
+                        ? rawName.split(' - ')[0] 
+                        : rawName;
+                    })()}
                   </h3>
                   <p className="text-sm text-foreground/70 mb-3">{stageInfo.name}</p>
 
@@ -349,11 +423,11 @@ export default function GardenPage({ params }) {
                   <div className="mb-3">
                     <div className="flex justify-between text-xs text-foreground/70 mb-1">
                       <span>Evrim İlerlemesi</span>
-                      <span>{Math.round(progress)}%</span>
+                      <span className={theme.accent}>{Math.round(progress)}%</span>
                     </div>
-                    <div className="w-full bg-background/50 rounded-full h-2">
+                    <div className="w-full bg-white/40 dark:bg-gray-800/40 rounded-full h-2">
                       <div 
-                        className="bg-gradient-to-r from-grow-green to-primary-accent h-2 rounded-full transition-all duration-300"
+                        className={`bg-gradient-to-r ${theme.gradient} h-2 rounded-full transition-all duration-300`}
                         style={{ width: `${progress}%` }}
                       ></div>
                     </div>
@@ -362,7 +436,7 @@ export default function GardenPage({ params }) {
                         {wateringsNeeded} sulama daha gerekli
                       </p>
                     ) : details.canEvolve ? (
-                      <p className="text-xs text-success-accent mt-1 font-medium">
+                      <p className={`text-xs ${theme.accent} mt-1 font-medium`}>
                         ✨ Evrim için hazır!
                       </p>
                     ) : null}
@@ -370,12 +444,12 @@ export default function GardenPage({ params }) {
 
                   {/* Stats */}
                   <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
-                    <div className="bg-background/30 rounded p-2 text-center">
-                      <div className="font-semibold text-foreground">{details.wateringCount || 0}</div>
+                    <div className="bg-white/30 dark:bg-gray-800/30 rounded p-2 text-center border border-white/20">
+                      <div className={`font-semibold ${theme.accent}`}>{details.wateringCount || 0}</div>
                       <div className="text-foreground/60">Sulama</div>
                     </div>
-                    <div className="bg-background/30 rounded p-2 text-center">
-                      <div className="font-semibold text-foreground">#{nft.tokenId}</div>
+                    <div className="bg-white/30 dark:bg-gray-800/30 rounded p-2 text-center border border-white/20">
+                      <div className={`font-semibold ${theme.accent}`}>#{nft.tokenId}</div>
                       <div className="text-foreground/60">Token ID</div>
                     </div>
                   </div>
@@ -388,7 +462,7 @@ export default function GardenPage({ params }) {
                         <button
                           onClick={() => handleWater(nft.tokenId)}
                           disabled={watering[nft.tokenId]}
-                          className="w-full btn-water disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center hover:scale-105 transition-all"
+                          className={`w-full bg-gradient-to-r ${theme.gradient} text-white py-2 px-4 rounded-lg font-medium hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-md`}
                         >
                           {watering[nft.tokenId] ? (
                             <>
@@ -406,7 +480,7 @@ export default function GardenPage({ params }) {
                         <button
                           onClick={() => handleEvolve(nft.tokenId)}
                           disabled={evolving[nft.tokenId]}
-                          className="w-full btn-evolve disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center hover:scale-105 transition-all"
+                          className={`w-full bg-gradient-to-r ${theme.gradient} text-white py-2 px-4 rounded-lg font-medium hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-md`}
                         >
                           {evolving[nft.tokenId] ? (
                             <>
@@ -421,7 +495,7 @@ export default function GardenPage({ params }) {
                       
                       {/* Fully Evolved Status */}
                       {(details.stage || 0) >= 4 && (
-                        <div className="w-full btn-success flex items-center justify-center">
+                        <div className={`w-full bg-gradient-to-r ${theme.gradient} text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center shadow-md`}>
                           🏆 Tam Evrimleşmiş
                         </div>
                       )}
@@ -432,6 +506,9 @@ export default function GardenPage({ params }) {
                     </div>
                   )}
                 </div>
+
+                {/* Hover Gradient Overlay */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${theme.glow} rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`}></div>
               </div>
             );
           })}
@@ -523,7 +600,13 @@ export default function GardenPage({ params }) {
                   </div>
                 </div>
                 <div className="font-semibold text-foreground">
-                  {nftDetails[selectedNFT.tokenId]?.metadata?.name || selectedNFT.name || `NFT #${selectedNFT.tokenId}`}
+                  {(() => {
+                    const rawName = nftDetails[selectedNFT.tokenId]?.metadata?.name || selectedNFT.name || `NFT #${selectedNFT.tokenId}`;
+                    // Stage kısmını çıkar
+                    return rawName.includes(' - 🌰') || rawName.includes(' - 🌱') || rawName.includes(' - 🌿') || rawName.includes(' - 🌸') || rawName.includes(' - 🍎')
+                      ? rawName.split(' - ')[0] 
+                      : rawName;
+                  })()}
                 </div>
               </div>
 

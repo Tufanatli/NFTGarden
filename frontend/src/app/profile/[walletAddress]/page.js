@@ -331,8 +331,8 @@ export default function ProfilePage() {
         )}
       </div>
 
-      <div className="bg-secondary-accent shadow-xl rounded-b-2xl p-6 md:p-8 relative -mt-16 md:-mt-24 mx-auto max-w-4xl">
-        <div className="flex flex-col md:flex-row items-center md:items-end md:space-x-6">
+      <div className="bg-gradient-to-t from-secondary-accent via-secondary-accent to-secondary-accent/85 shadow-xl rounded-b-2xl p-6 md:p-8 relative -mt-16 md:-mt-24 mx-auto max-w-4xl backdrop-blur-sm">
+        <div className="flex flex-col md:flex-row items-center md:items-start md:space-x-6">
           <div className={classNames("relative h-32 w-32 md:h-40 md:w-40 rounded-full border-4 shadow-lg -mt-16 md:-mt-20 overflow-hidden flex-shrink-0",
              profileImagePreview ? 'border-secondary-accent' : 'border-primary-accent/30 bg-background/80',
              isOwnProfile && editMode ? 'cursor-pointer' : ''
@@ -360,7 +360,7 @@ export default function ProfilePage() {
             )}
           </div>
 
-          <div className="mt-4 md:mt-0 flex-grow text-center md:text-left">
+          <div className="mt-8 md:mt-4 flex-grow text-center md:text-left flex flex-col justify-center">
             {editMode && isOwnProfile ? (
               <input 
                 type="text" 
@@ -381,96 +381,95 @@ export default function ProfilePage() {
                     placeholder="Kendinizden bahsedin... (Max 200 karakter)"
                     rows="3"
                     maxLength="200"
-                    className="mt-2 text-sm text-foreground/90 bg-background border border-primary-accent/50 rounded-md px-3 py-1.5 focus:ring-2 focus:ring-primary-accent w-full resize-none"
+                    className="mt-3 text-sm text-foreground/90 bg-background border border-primary-accent/50 rounded-md px-3 py-1.5 focus:ring-2 focus:ring-primary-accent w-full resize-none"
                 />
             ) : (
-                profileData?.bio && <p className="mt-2 text-sm text-foreground/90 dark:text-foreground/80 max-w-xl">{profileData.bio}</p>
+                profileData?.bio && <p className="mt-3 text-sm text-foreground/90 dark:text-foreground/80 max-w-xl">{profileData.bio}</p>
             )}
           </div>
 
-          <div className="mt-6 md:mt-0 md:ml-auto flex-shrink-0 flex flex-col items-center md:items-end space-y-2 w-full md:w-auto">
+          <div className="mt-6 md:mt-4 md:ml-auto flex-shrink-0 flex flex-col items-center md:items-end justify-center space-y-2 w-full md:w-auto md:min-w-[200px]">
             {isOwnProfile && !editMode && (
               <div className="w-full md:w-auto space-y-2">
-              <button onClick={() => setEditMode(true)} 
-                className="bg-primary-accent hover:brightness-95 text-background font-medium py-2 px-5 rounded-lg transition-colors shadow-md w-full md:w-auto">
-                  ✏️ Profili Düzenle
+                {/* Main Edit Button */}
+                <button onClick={() => setEditMode(true)} 
+                  className="bg-gradient-to-r from-primary-accent to-primary-accent/80 hover:from-primary-accent/90 hover:to-primary-accent/70 text-background font-medium py-2 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 w-full md:w-auto flex items-center justify-center group">
+                  <span className="mr-2 group-hover:scale-110 transition-transform">✏️</span>
+                  Profili Düzenle
                 </button>
                 
                 {/* Share Profile Button */}
-                <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
-                  <button 
-                    onClick={handleShareProfile}
-                    disabled={shareLoading}
-                    className={`flex-1 font-medium py-2 px-4 rounded-lg transition-all shadow-md hover:scale-105 disabled:opacity-70 flex items-center justify-center ${
-                      isProfileShared 
-                        ? 'bg-green-600 hover:bg-green-700 text-white' 
-                        : 'bg-blue-600 hover:bg-blue-700 text-white'
-                    }`}
-                  >
-                    {shareLoading ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    ) : (
-                      <span className="mr-2">{isProfileShared ? '🌐' : '👥'}</span>
-                    )}
+                <button 
+                  onClick={handleShareProfile}
+                  disabled={shareLoading}
+                  className={`font-medium py-2 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-70 flex items-center justify-center group w-full md:w-auto ${
+                    isProfileShared 
+                      ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white' 
+                      : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
+                  } hover:scale-105`}
+                >
+                  {shareLoading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  ) : (
+                    <span className="mr-2 group-hover:scale-110 transition-transform">
+                      {isProfileShared ? '🌐' : '👥'}
+                    </span>
+                  )}
+                  <span className="text-sm">
                     {shareLoading 
                       ? 'Güncelleniyor...' 
                       : isProfileShared 
-                        ? 'Toplulukta Paylaşıldı' 
+                        ? 'Paylaşıldı' 
                         : 'Toplulukta Paylaş'
                     }
-                  </button>
-                  
-                  <button 
-                    onClick={copyProfileLink}
-                    className="flex-1 md:flex-initial bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-all shadow-md hover:scale-105 flex items-center justify-center"
-                  >
-                    🔗 Link Kopyala
-              </button>
-                </div>
+                  </span>
+                </button>
                 
+                {/* Copy Profile Link Button */}
+                <button 
+                  onClick={copyProfileLink}
+                  className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 w-full md:w-auto flex items-center justify-center group"
+                >
+                  <span className="mr-2 group-hover:scale-110 transition-transform">🔗</span>
+                  <span className="text-sm">Link Kopyala</span>
+                </button>
+
+                {/* Status Indicator */}
                 {isProfileShared && (
-                  <div className="text-xs text-green-600 dark:text-green-400 text-center md:text-right bg-green-100 dark:bg-green-900/30 rounded-lg px-3 py-2">
-                    ✅ Profiliniz toplulukta görünür
+                  <div className="text-xs text-green-600 dark:text-green-400 text-center md:text-right bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg px-3 py-1.5 backdrop-blur-sm">
+                    <div className="flex items-center justify-center md:justify-end">
+                      <span className="mr-1">✅</span>
+                      <span className="font-medium text-xs">Toplulukta görünür</span>
+                    </div>
                   </div>
                 )}
               </div>
             )}
             
             {isOwnProfile && editMode && (
-              <div className="flex space-x-2 w-full md:w-auto">
+              <div className="flex space-x-3 w-full md:w-auto">
                 <button onClick={handleCancelEdit} disabled={saving}
-                  className="flex-1 bg-background/80 hover:bg-background text-foreground font-medium py-2 px-4 rounded-lg transition-colors shadow disabled:opacity-70">
-                  ❌ İptal
+                  className="flex-1 bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 dark:from-gray-700 dark:to-gray-800 dark:hover:from-gray-600 dark:hover:to-gray-700 text-foreground font-medium py-2.5 px-5 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-70 hover:scale-105 flex items-center justify-center group">
+                  <span className="mr-2 group-hover:scale-110 transition-transform">❌</span>
+                  İptal
                 </button>
                 <button onClick={handleSaveProfile} disabled={saving}
-                  className="flex-1 bg-primary-accent hover:brightness-95 text-background font-medium py-2 px-4 rounded-lg transition-colors shadow-md disabled:opacity-70 flex items-center justify-center">
+                  className="flex-1 bg-gradient-to-r from-primary-accent to-primary-accent/80 hover:from-primary-accent/90 hover:to-primary-accent/70 text-background font-semibold py-2.5 px-5 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-70 hover:scale-105 flex items-center justify-center group">
                   {saving ? (
                       <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-background" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                  ) : null}
-                  {saving ? 'Kaydediliyor...' : '💾 Değişiklikleri Kaydet'}
+                  ) : (
+                    <span className="mr-2 group-hover:scale-110 transition-transform">💾</span>
+                  )}
+                  {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
                 </button>
               </div>
             )}
             
-            {/* Profile Actions for Non-Own Profiles */}
-            {!isOwnProfile && (
-              <div className="w-full md:w-auto space-y-2">
-                <button 
-                  onClick={copyProfileLink}
-                  className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-all shadow-md hover:scale-105 flex items-center justify-center"
-                >
-                  🔗 Profil Linkini Paylaş
-                </button>
-              </div>
-            )}
-            
-             <Link href={`/garden/${profileWalletAddress}`} 
-                className="text-sm text-primary-accent hover:underline mt-2 text-center md:text-right w-full md:w-auto">
-                {isOwnProfile ? 'Bahçeme Git' : `${displayUsernameText}'in Bahçesine Git`} 🪴
-            </Link>
+
+
           </div>
         </div>
       </div>
