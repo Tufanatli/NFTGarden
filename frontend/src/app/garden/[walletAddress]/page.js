@@ -274,74 +274,212 @@ export default function GardenPage({ params }) {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-12 text-center">
-        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary-accent border-r-transparent"></div>
+      <div className="min-h-screen relative overflow-hidden">
+        {/* Ultra-Modern Animated Background */}
+        <div className="fixed inset-0 pointer-events-none">
+          <div className="absolute top-10 left-10 w-72 h-72 bg-gradient-to-br from-green-500/20 to-teal-500/20 rounded-full filter blur-3xl animate-blob"></div>
+          <div className="absolute top-20 right-20 w-96 h-96 bg-gradient-to-br from-blue-500/20 to-green-500/20 rounded-full filter blur-3xl animate-blob animation-delay-2000"></div>
+          <div className="absolute bottom-20 left-20 w-80 h-80 bg-gradient-to-br from-primary-accent/20 to-blue-500/20 rounded-full filter blur-3xl animate-blob animation-delay-4000"></div>
+        </div>
+        
+        <div className="container mx-auto px-4 py-16 relative z-10 flex items-center justify-center min-h-screen">
+          <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 rounded-3xl p-12 text-center overflow-hidden">
+            {/* Animated Background Elements */}
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute top-4 right-8 w-24 h-24 bg-green-500/10 rounded-full filter blur-xl animate-blob"></div>
+              <div className="absolute bottom-4 left-8 w-20 h-20 bg-teal-500/10 rounded-full filter blur-lg animate-blob animation-delay-2000"></div>
+            </div>
+            
+            <div className="relative z-10">
+              <div className="w-20 h-20 bg-gradient-to-br from-green-500/20 to-teal-500/20 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-white/20">
+                <span className="text-4xl">🌱</span>
+              </div>
+              
+              <div className="w-12 h-12 border-4 border-green-500/30 border-t-green-500 rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-xl font-medium text-foreground">Bahçe yükleniyor...</p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!account) {
     return (
-      <div className="container mx-auto px-4 py-12 text-center">
-        <div className="bg-secondary-accent rounded-lg p-8 max-w-md mx-auto shadow-lg">
-          <div className="text-6xl mb-4">🌱</div>
-          <h2 className="text-2xl font-bold text-foreground mb-4">Bahçeye Hoş Geldiniz</h2>
-          <p className="text-foreground/70 mb-6">Bahçenizi görüntülemek için cüzdanınızı bağlayın.</p>
+      <div className="min-h-screen relative overflow-hidden">
+        {/* Ultra-Modern Animated Background */}
+        <div className="fixed inset-0 pointer-events-none">
+          <div className="absolute top-10 left-10 w-72 h-72 bg-gradient-to-br from-green-500/20 to-teal-500/20 rounded-full filter blur-3xl animate-blob"></div>
+          <div className="absolute top-20 right-20 w-96 h-96 bg-gradient-to-br from-blue-500/20 to-green-500/20 rounded-full filter blur-3xl animate-blob animation-delay-2000"></div>
+          <div className="absolute bottom-20 left-20 w-80 h-80 bg-gradient-to-br from-primary-accent/20 to-blue-500/20 rounded-full filter blur-3xl animate-blob animation-delay-4000"></div>
+        </div>
+        
+        <div className="container mx-auto px-4 py-16 relative z-10 flex items-center justify-center min-h-screen">
+          <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 rounded-3xl p-12 max-w-lg mx-auto text-center overflow-hidden shadow-2xl">
+            {/* Animated Background Elements */}
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute top-4 right-8 w-32 h-32 bg-green-500/10 rounded-full filter blur-2xl animate-blob"></div>
+              <div className="absolute bottom-4 left-8 w-24 h-24 bg-teal-500/10 rounded-full filter blur-xl animate-blob animation-delay-2000"></div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-blue-500/10 rounded-full filter blur-3xl animate-blob animation-delay-4000"></div>
+            </div>
+            
+            <div className="relative z-10">
+              <div className="w-24 h-24 bg-gradient-to-br from-green-500/20 to-teal-500/20 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-white/20">
+                <span className="text-6xl">🌱</span>
+              </div>
+              
+              <h2 className="text-3xl font-black mb-4">
+                <span className="bg-gradient-to-r from-green-500 via-teal-500 to-blue-500 bg-clip-text text-transparent">
+                  Bahçeye Hoş Geldiniz
+                </span>
+              </h2>
+              
+              <p className="text-lg text-foreground/70 mb-8 leading-relaxed">
+                Bu özel bahçeyi keşfetmek ve NFT'lerle etkileşim kurmak için cüzdanınızı bağlayın.
+              </p>
+              
           <button 
             onClick={connectWallet}
-            className="bg-primary-accent text-background px-6 py-3 rounded-lg font-medium hover:brightness-90 transition-all"
+                className="inline-flex items-center space-x-3 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white font-semibold px-8 py-4 rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
           >
-            🔗 Cüzdan Bağla
+                <span className="text-xl">🔗</span>
+                <span>Cüzdan Bağla</span>
           </button>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
   
      return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-foreground mb-3">🌺 NFT Bahçem</h1>
-        <p className="text-foreground/70 text-lg">NFT'lerinizi sulayın ve evrimlerini izleyin</p>
-        </div>
-
-      {/* Garden Owner Info */}
-      <div className="bg-secondary-accent rounded-lg p-4 mb-6 text-center">
-        <p className="text-sm text-foreground/70 mb-1">Bahçe Sahibi:</p>
-        <p className="font-mono text-foreground">{walletAddress}</p>
-        {account.toLowerCase() === walletAddress.toLowerCase() && (
-          <p className="text-xs text-success-accent mt-1">✅ Bu sizin bahçeniz</p>
-        )}
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Ultra-Modern Animated Background */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-10 left-10 w-72 h-72 bg-gradient-to-br from-green-500/20 to-teal-500/20 rounded-full filter blur-3xl animate-blob"></div>
+        <div className="absolute top-20 right-20 w-96 h-96 bg-gradient-to-br from-blue-500/20 to-green-500/20 rounded-full filter blur-3xl animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-20 left-20 w-80 h-80 bg-gradient-to-br from-primary-accent/20 to-blue-500/20 rounded-full filter blur-3xl animate-blob animation-delay-4000"></div>
       </div>
 
-      {/* Garden Stats */}
-      {gardenNFTs.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-secondary-accent p-4 rounded-lg text-center">
-            <div className="text-2xl font-bold text-primary-accent">{gardenNFTs.length}</div>
-            <div className="text-sm text-foreground/70">Toplam NFT</div>
+      <div className="container mx-auto px-4 py-8 max-w-7xl relative z-10">
+        {/* Ultra-Modern Header */}
+        <div className="relative mb-12">
+          {/* Animated Background Elements */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-2 left-8 w-32 h-32 bg-green-500/10 rounded-full filter blur-2xl animate-blob"></div>
+            <div className="absolute top-0 right-12 w-28 h-28 bg-teal-500/10 rounded-full filter blur-xl animate-blob animation-delay-2000"></div>
           </div>
-          <div className="bg-secondary-accent p-4 rounded-lg text-center">
-            <div className="text-2xl font-bold text-success-accent">
-              {gardenNFTs.filter(nft => (nftDetails[nft.tokenId]?.stage || 0) >= 4).length}
+          
+          <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 rounded-3xl p-8 md:p-12 text-center overflow-hidden shadow-xl">
+            <div className="flex items-center justify-center space-x-4 mb-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-green-500/20 to-teal-500/20 rounded-3xl flex items-center justify-center border border-white/20">
+                <span className="text-4xl">🌺</span>
+              </div>
+              <div className="text-left">
+                <h1 className="text-3xl md:text-4xl font-black">
+                  <span className="bg-gradient-to-r from-green-500 via-teal-500 to-blue-500 bg-clip-text text-transparent">
+                    NFT Bahçem
+                  </span>
+                </h1>
+                <p className="text-foreground/60 text-lg">NFT'lerinizi sulayın ve evrimlerini izleyin</p>
+              </div>
             </div>
-            <div className="text-sm text-foreground/70">Olgun Bitkiler</div>
+          </div>
+        </div>
+
+        {/* Ultra-Modern Garden Owner Info */}
+        <div className="relative mb-8">
+          <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 rounded-3xl p-6 text-center overflow-hidden">
+            {/* Animated Background Elements */}
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute top-2 right-6 w-20 h-20 bg-primary-accent/10 rounded-full filter blur-xl animate-blob"></div>
+              <div className="absolute bottom-2 left-6 w-16 h-16 bg-green-500/10 rounded-full filter blur-lg animate-blob animation-delay-2000"></div>
+            </div>
+            
+            <div className="relative z-10 flex items-center justify-center space-x-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary-accent/20 to-green-500/20 rounded-2xl flex items-center justify-center border border-white/20">
+                <span className="text-2xl">👤</span>
+              </div>
+              <div className="text-left">
+                <p className="text-sm text-foreground/60 mb-1">Bahçe Sahibi</p>
+                <p className="font-mono text-foreground font-medium">{walletAddress}</p>
+        {account.toLowerCase() === walletAddress.toLowerCase() && (
+                  <div className="flex items-center space-x-2 mt-2">
+                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                    <p className="text-xs text-green-500 font-medium">Bu sizin bahçeniz</p>
+                  </div>
+        )}
+      </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Ultra-Modern Garden Stats */}
+        {gardenNFTs.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+            {/* Toplam NFT */}
+            <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 rounded-3xl p-6 text-center overflow-hidden">
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-2 right-2 w-16 h-16 bg-primary-accent/10 rounded-full filter blur-lg animate-blob"></div>
+              </div>
+              <div className="relative z-10">
+                <div className="w-14 h-14 bg-gradient-to-br from-primary-accent/20 to-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/20">
+                  <span className="text-2xl">🌿</span>
                 </div>
-          <div className="bg-secondary-accent p-4 rounded-lg text-center">
-            <div className="text-2xl font-bold text-primary-accent">
+                <div className="text-3xl font-black text-primary-accent mb-2">{gardenNFTs.length}</div>
+                <div className="text-sm text-foreground/60 font-medium">Toplam NFT</div>
+              </div>
+            </div>
+
+            {/* Olgun Bitkiler */}
+            <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 rounded-3xl p-6 text-center overflow-hidden">
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-2 right-2 w-16 h-16 bg-green-500/10 rounded-full filter blur-lg animate-blob"></div>
+              </div>
+              <div className="relative z-10">
+                <div className="w-14 h-14 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/20">
+                  <span className="text-2xl">🍎</span>
+                </div>
+                <div className="text-3xl font-black text-green-500 mb-2">
+              {gardenNFTs.filter(nft => (nftDetails[nft.tokenId]?.stage || 0) >= 4).length}
+                </div>
+                <div className="text-sm text-foreground/60 font-medium">Olgun Bitkiler</div>
+              </div>
+            </div>
+
+            {/* Büyüyen Bitkiler */}
+            <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 rounded-3xl p-6 text-center overflow-hidden">
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-2 right-2 w-16 h-16 bg-teal-500/10 rounded-full filter blur-lg animate-blob"></div>
+              </div>
+              <div className="relative z-10">
+                <div className="w-14 h-14 bg-gradient-to-br from-teal-500/20 to-cyan-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/20">
+                  <span className="text-2xl">🌱</span>
+                </div>
+                <div className="text-3xl font-black text-teal-500 mb-2">
               {gardenNFTs.filter(nft => {
                 const stage = nftDetails[nft.tokenId]?.stage || 0;
                 return stage > 0 && stage < 4;
               }).length}
             </div>
-            <div className="text-sm text-foreground/70">Büyüyen Bitkiler</div>
+                <div className="text-sm text-foreground/60 font-medium">Büyüyen Bitkiler</div>
+              </div>
+            </div>
+
+            {/* Tohumlar */}
+            <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 rounded-3xl p-6 text-center overflow-hidden">
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-2 right-2 w-16 h-16 bg-amber-500/10 rounded-full filter blur-lg animate-blob"></div>
+              </div>
+              <div className="relative z-10">
+                <div className="w-14 h-14 bg-gradient-to-br from-amber-500/20 to-yellow-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/20">
+                  <span className="text-2xl">🌰</span>
           </div>
-          <div className="bg-secondary-accent p-4 rounded-lg text-center">
-            <div className="text-2xl font-bold text-tertiary-accent">
+                <div className="text-3xl font-black text-amber-500 mb-2">
               {gardenNFTs.filter(nft => (nftDetails[nft.tokenId]?.stage || 0) === 0).length}
         </div>
-            <div className="text-sm text-foreground/70">Tohumlar</div>
+                <div className="text-sm text-foreground/60 font-medium">Tohumlar</div>
+              </div>
           </div>
           </div>
         )}
@@ -514,74 +652,151 @@ export default function GardenPage({ params }) {
           })}
         </div>
       ) : (
-        <div className="text-center py-12 bg-secondary-accent rounded-xl shadow">
-          <div className="text-6xl mb-4">🌱</div>
-          <h3 className="text-2xl font-semibold text-foreground mb-3">Bahçe Boş</h3>
-          <p className="text-foreground/70 mb-6 max-w-md mx-auto">
+        <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 rounded-3xl p-16 text-center overflow-hidden">
+          {/* Animated Background Elements */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-8 left-8 w-32 h-32 bg-green-500/10 rounded-full filter blur-2xl animate-blob"></div>
+            <div className="absolute bottom-8 right-8 w-24 h-24 bg-teal-500/10 rounded-full filter blur-xl animate-blob animation-delay-2000"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-blue-500/10 rounded-full filter blur-3xl animate-blob animation-delay-4000"></div>
+          </div>
+          
+          <div className="relative z-10">
+            <div className="w-24 h-24 bg-gradient-to-br from-green-500/20 to-teal-500/20 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-white/20">
+              <span className="text-6xl">🌱</span>
+            </div>
+            
+            <h3 className="text-3xl font-black mb-6">
+              <span className="bg-gradient-to-r from-green-500 via-teal-500 to-blue-500 bg-clip-text text-transparent">
+                Bahçe Boş
+              </span>
+            </h3>
+            
+            <p className="text-lg text-foreground/70 mb-8 max-w-lg mx-auto leading-relaxed">
             {account.toLowerCase() === walletAddress.toLowerCase() 
               ? 'Henüz bahçenizde NFT bulunmuyor. NFT\'lerinizi "NFT\'lerim" sayfasından bahçenize transfer edebilirsiniz.'
               : 'Bu bahçede henüz NFT bulunmuyor.'
             }
           </p>
+            
           {account.toLowerCase() === walletAddress.toLowerCase() && (
             <a 
               href="/my-nfts"
-              className="bg-primary-accent text-background px-6 py-3 rounded-lg font-medium hover:brightness-90 transition-all"
+                className="inline-flex items-center space-x-3 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white font-semibold px-8 py-4 rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
             >
-              💎 NFT'lerime Git
+                <span className="text-xl">💎</span>
+                <span>NFT'lerime Git</span>
             </a>
                     )}
+          </div>
                 </div>
               )}
 
-      {/* Evolution Guide */}
-      <div className="mt-12 bg-secondary-accent rounded-lg p-6">
-        <h2 className="text-xl font-bold text-foreground mb-4">🌱 Evrim Rehberi</h2>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          {[
-            { stage: '🌰', name: 'Tohum', waterings: '0', description: 'Başlangıç' },
-            { stage: '🌱', name: 'Filiz', waterings: '3', description: 'İlk büyüme' },
-            { stage: '🌿', name: 'Fidan', waterings: '5', description: 'Genç bitki' },
-            { stage: '🌸', name: 'Çiçek', waterings: '7', description: 'Çiçeklenme' },
-            { stage: '🍎', name: 'Meyve', waterings: '10', description: 'Olgunluk' }
-          ].map((stage, index) => (
-            <div key={index} className="text-center p-4 bg-background/30 rounded-lg">
-              <div className="text-3xl mb-2">{stage.stage}</div>
-              <div className="font-semibold text-foreground">{stage.name}</div>
-              <div className="text-sm text-foreground/70 mb-2">{stage.description}</div>
-              <div className="text-xs text-primary-accent font-medium">
-                {index === 0 ? 'Başla' : `${stage.waterings} sulama`}
+        {/* Ultra-Modern Evolution Guide */}
+        <div className="mt-16 relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 rounded-3xl p-8 md:p-12 overflow-hidden">
+          {/* Animated Background Elements */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-4 left-8 w-32 h-32 bg-green-500/10 rounded-full filter blur-2xl animate-blob"></div>
+            <div className="absolute bottom-4 right-8 w-28 h-28 bg-teal-500/10 rounded-full filter blur-xl animate-blob animation-delay-2000"></div>
+            <div className="absolute top-1/2 right-1/4 w-24 h-24 bg-blue-500/10 rounded-full filter blur-lg animate-blob animation-delay-4000"></div>
+          </div>
+          
+          <div className="relative z-10">
+            <div className="flex items-center justify-center space-x-4 mb-8">
+              <div className="w-16 h-16 bg-gradient-to-br from-green-500/20 to-teal-500/20 rounded-2xl flex items-center justify-center border border-white/20">
+                <span className="text-3xl">🌱</span>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-black">
+                <span className="bg-gradient-to-r from-green-500 via-teal-500 to-blue-500 bg-clip-text text-transparent">
+                  Evrim Rehberi
+                </span>
+              </h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+              {[
+                { stage: '🌰', name: 'Tohum', waterings: '0', description: 'Başlangıç', color: 'from-amber-500/20 to-yellow-500/20', accent: 'text-amber-500' },
+                { stage: '🌱', name: 'Filiz', waterings: '3', description: 'İlk büyüme', color: 'from-lime-500/20 to-green-500/20', accent: 'text-lime-500' },
+                { stage: '🌿', name: 'Fidan', waterings: '5', description: 'Genç bitki', color: 'from-green-500/20 to-emerald-500/20', accent: 'text-green-500' },
+                { stage: '🌸', name: 'Çiçek', waterings: '7', description: 'Çiçeklenme', color: 'from-pink-500/20 to-rose-500/20', accent: 'text-pink-500' },
+                { stage: '🍎', name: 'Meyve', waterings: '10', description: 'Olgunluk', color: 'from-red-500/20 to-rose-500/20', accent: 'text-red-500' }
+              ].map((stage, index) => (
+                <div key={index} className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-sm border border-white/20 rounded-2xl p-6 text-center overflow-hidden hover:scale-105 transition-all duration-300">
+                  {/* Stage Background Element */}
+                  <div className="absolute inset-0 pointer-events-none">
+                    <div className={`absolute top-2 right-2 w-12 h-12 bg-gradient-to-br ${stage.color} rounded-full filter blur-lg animate-blob`}></div>
+                  </div>
+                  
+                  <div className="relative z-10">
+                    <div className="text-4xl mb-4">{stage.stage}</div>
+                    <div className={`font-bold text-lg ${stage.accent} mb-2`}>{stage.name}</div>
+                    <div className="text-sm text-foreground/70 mb-3">{stage.description}</div>
+                    <div className="text-xs font-medium bg-white/20 dark:bg-gray-800/20 rounded-full px-3 py-1 backdrop-blur-sm border border-white/20">
+                      {index === 0 ? 'Başla' : `${stage.waterings} sulama`}
+                    </div>
               </div>
             </div>
           ))}
         </div>
+          </div>
+        </div>
+
+        {/* Ultra-Modern Details Modal */}
+        {showDetailsModal && selectedNFT && (() => {
+          const nftData = nftDetails[selectedNFT.tokenId] || {};
+          const theme = getStageTheme(nftData.stage || 0);
+          const stageInfo = getStageInfo(nftData.stage || 0);
+          
+          return (
+            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className={`relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-2xl border border-white/20 dark:border-gray-700/30 rounded-3xl p-8 max-w-xl w-full shadow-3xl max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-100`}>
+                
+                {/* Themed Animated Background Elements */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
+                  <div className={`absolute top-8 right-12 w-32 h-32 bg-gradient-to-br ${theme.glow} rounded-full filter blur-2xl animate-blob opacity-30`}></div>
+                  <div className={`absolute bottom-8 left-12 w-24 h-24 bg-gradient-to-tr ${theme.glow} rounded-full filter blur-xl animate-blob animation-delay-2000 opacity-20`}></div>
+                  <div className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-gradient-to-br ${theme.glow} rounded-full filter blur-3xl animate-blob animation-delay-4000 opacity-10`}></div>
       </div>
 
-      {/* Details Modal */}
-      {showDetailsModal && selectedNFT && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-secondary-accent rounded-lg p-6 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-foreground">NFT Detayları</h3>
+                <div className="relative z-10">
+                  {/* Modal Header */}
+                  <div className="flex justify-between items-center mb-8">
+                    <div className="flex items-center space-x-4">
+                      <div className={`w-16 h-16 bg-gradient-to-br ${theme.bgGradient} rounded-2xl flex items-center justify-center border border-white/20 shadow-lg`}>
+                        <span className="text-3xl">{theme.emoji}</span>
+                      </div>
+                      <div>
+                        <h3 className="text-3xl font-black">
+                          <span className={`bg-gradient-to-r ${theme.gradient} bg-clip-text text-transparent`}>
+                            NFT Detayları
+                          </span>
+                        </h3>
+                        <p className="text-foreground/60 text-sm font-medium">{stageInfo.name}</p>
+                      </div>
+                    </div>
               <button
                 onClick={() => setShowDetailsModal(false)}
-                className="bg-background/50 p-2 rounded-full hover:bg-background transition-colors"
+                      className={`bg-gradient-to-br ${theme.glow} backdrop-blur-sm border border-white/20 p-4 rounded-2xl hover:scale-110 transition-all duration-200 shadow-lg hover:shadow-xl`}
               >
-                ❌
+                      <span className="text-xl">✖️</span>
               </button>
             </div>
             
-            <div className="space-y-4">
-              {/* NFT Image in Modal */}
-              <div className="text-center p-4 bg-background/30 rounded-lg">
-                <div className="w-32 h-32 mx-auto mb-4 relative rounded-lg overflow-hidden bg-gradient-to-br from-green-100 to-blue-100 dark:from-green-900 dark:to-blue-900">
-                  {nftDetails[selectedNFT.tokenId]?.imageUrl ? (
+                  <div className="space-y-6">
+                    {/* NFT Main Display */}
+                    <div className={`relative text-center p-8 bg-gradient-to-br ${theme.bgGradient} rounded-3xl border border-white/20 overflow-hidden`}>
+                      {/* Decorative Elements */}
+                      <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -translate-y-10 translate-x-10"></div>
+                      <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/10 rounded-full translate-y-8 -translate-x-8"></div>
+                      
+                      <div className="relative z-10">
+                        <div className="w-40 h-40 mx-auto mb-6 relative rounded-2xl overflow-hidden shadow-2xl bg-white/10 border border-white/20">
+                          {nftData.imageUrl ? (
                     <Image
-                      src={nftDetails[selectedNFT.tokenId].imageUrl}
-                      alt={nftDetails[selectedNFT.tokenId]?.metadata?.name || `NFT #${selectedNFT.tokenId}`}
+                              src={nftData.imageUrl}
+                              alt={nftData.metadata?.name || `NFT #${selectedNFT.tokenId}`}
                       fill
-                      sizes="128px"
-                      className="object-cover"
+                              sizes="160px"
+                              className="object-cover hover:scale-105 transition-transform duration-300"
                       onError={(e) => {
                         e.target.style.display = 'none';
                         e.target.nextSibling.style.display = 'flex';
@@ -592,84 +807,141 @@ export default function GardenPage({ params }) {
                   {/* Fallback Emoji */}
                   <div 
                     className="absolute inset-0 flex items-center justify-center"
-                    style={{ display: nftDetails[selectedNFT.tokenId]?.imageUrl ? 'none' : 'flex' }}
-                  >
-                    <div className="text-4xl">
-                      {getStageInfo(nftDetails[selectedNFT.tokenId]?.stage || 0).name.split(' ')[0]}
+                            style={{ display: nftData.imageUrl ? 'none' : 'flex' }}
+                          >
+                            <div className="text-8xl">{theme.emoji}</div>
+                          </div>
+                        </div>
+                        
+                        <h4 className="text-2xl font-black text-white mb-2">
+                          {(() => {
+                            const rawName = nftData.metadata?.name || selectedNFT.name || `NFT #${selectedNFT.tokenId}`;
+                            return rawName.includes(' - 🌰') || rawName.includes(' - 🌱') || rawName.includes(' - 🌿') || rawName.includes(' - 🌸') || rawName.includes(' - 🍎')
+                              ? rawName.split(' - ')[0] 
+                              : rawName;
+                          })()}
+                        </h4>
+                        <p className="text-white/80 text-sm font-medium">Token #{selectedNFT.tokenId}</p>
+                      </div>
                     </div>
+
+                    {/* Info Cards Grid */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className={`relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 rounded-2xl p-4 overflow-hidden`}>
+                        <div className={`absolute top-1 right-1 w-12 h-12 bg-gradient-to-br ${theme.glow} rounded-full filter blur-lg opacity-30`}></div>
+                        <div className="relative z-10">
+                          <div className="text-foreground/70 text-sm mb-2 font-medium">🏷️ Token ID</div>
+                          <div className={`font-black text-xl ${theme.accent}`}>#{selectedNFT.tokenId}</div>
                   </div>
                 </div>
-                <div className="font-semibold text-foreground">
-                  {(() => {
-                    const rawName = nftDetails[selectedNFT.tokenId]?.metadata?.name || selectedNFT.name || `NFT #${selectedNFT.tokenId}`;
-                    // Stage kısmını çıkar
-                    return rawName.includes(' - 🌰') || rawName.includes(' - 🌱') || rawName.includes(' - 🌿') || rawName.includes(' - 🌸') || rawName.includes(' - 🍎')
-                      ? rawName.split(' - ')[0] 
-                      : rawName;
-                  })()}
+                      
+                      <div className={`relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 rounded-2xl p-4 overflow-hidden`}>
+                        <div className={`absolute top-1 right-1 w-12 h-12 bg-gradient-to-br ${theme.glow} rounded-full filter blur-lg opacity-30`}></div>
+                        <div className="relative z-10">
+                          <div className="text-foreground/70 text-sm mb-2 font-medium">🌱 Aşama</div>
+                          <div className={`font-black text-xl ${theme.accent}`}>
+                            {stageInfo.name}
+                          </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="bg-background/30 rounded p-3">
-                  <div className="text-foreground/70 mb-1">Token ID</div>
-                  <div className="font-semibold text-foreground">#{selectedNFT.tokenId}</div>
+                      <div className={`relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 rounded-2xl p-4 overflow-hidden`}>
+                        <div className={`absolute top-1 right-1 w-12 h-12 bg-gradient-to-br ${theme.glow} rounded-full filter blur-lg opacity-30`}></div>
+                        <div className="relative z-10">
+                          <div className="text-foreground/70 text-sm mb-2 font-medium">💧 Toplam Sulama</div>
+                          <div className={`font-black text-xl ${theme.accent}`}>
+                            {nftData.wateringCount || 0}
                 </div>
-                <div className="bg-background/30 rounded p-3">
-                  <div className="text-foreground/70 mb-1">Aşama</div>
-                  <div className="font-semibold text-foreground">
-                    {getStageInfo(nftDetails[selectedNFT.tokenId]?.stage || 0).name}
                   </div>
                 </div>
-                <div className="bg-background/30 rounded p-3">
-                  <div className="text-foreground/70 mb-1">Toplam Sulama</div>
-                  <div className="font-semibold text-foreground">
-                    {nftDetails[selectedNFT.tokenId]?.wateringCount || 0}
-                  </div>
-                </div>
-                <div className="bg-background/30 rounded p-3">
-                  <div className="text-foreground/70 mb-1">Son Sulama</div>
-                  <div className="font-semibold text-foreground text-xs">
-                    {nftDetails[selectedNFT.tokenId]?.lastWatered 
-                      ? new Date(nftDetails[selectedNFT.tokenId].lastWatered * 1000).toLocaleDateString('tr-TR')
+                      
+                      <div className={`relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 rounded-2xl p-4 overflow-hidden`}>
+                        <div className={`absolute top-1 right-1 w-12 h-12 bg-gradient-to-br ${theme.glow} rounded-full filter blur-lg opacity-30`}></div>
+                        <div className="relative z-10">
+                          <div className="text-foreground/70 text-sm mb-2 font-medium">⏰ Son Sulama</div>
+                          <div className={`font-bold text-sm ${theme.accent}`}>
+                            {nftData.lastWatered 
+                              ? new Date(nftData.lastWatered * 1000).toLocaleDateString('tr-TR')
                       : 'Hiç sulanmadı'
                     }
                   </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Enhanced Progress Section */}
+                    <div className={`relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 rounded-2xl p-6 overflow-hidden`}>
+                      <div className={`absolute inset-0 bg-gradient-to-br ${theme.glow} opacity-5`}></div>
+                      <div className={`absolute top-2 right-4 w-16 h-16 bg-gradient-to-br ${theme.glow} rounded-full filter blur-xl opacity-30`}></div>
+                      
+                      <div className="relative z-10">
+                        <div className="flex items-center space-x-3 mb-4">
+                          <div className={`w-10 h-10 bg-gradient-to-br ${theme.bgGradient} rounded-xl flex items-center justify-center border border-white/20`}>
+                            <span className="text-lg">📊</span>
+                          </div>
+                          <div>
+                            <div className="text-foreground font-bold text-lg">Evrim İlerlemesi</div>
+                            <div className="text-foreground/60 text-sm">Sonraki aşamaya kadar</div>
                 </div>
               </div>
 
-              {/* Progress */}
-              <div className="bg-background/30 rounded p-3">
-                <div className="text-foreground/70 mb-2">Evrim İlerlemesi</div>
-                <div className="w-full bg-background/50 rounded-full h-3 mb-2">
-                  <div 
-                    className="bg-gradient-to-r from-grow-green to-primary-accent h-3 rounded-full transition-all duration-300"
+                        <div className="mb-3">
+                          <div className="flex justify-between text-sm mb-2">
+                            <span className="text-foreground/70 font-medium">İlerleme</span>
+                            <span className={`font-bold ${theme.accent}`}>
+                              {Math.round(getProgressPercentage(
+                                nftData.stage || 0, 
+                                nftData.wateringCount || 0,
+                                nftData.evolutionThreshold || 0
+                              ))}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-white/20 dark:bg-gray-800/20 rounded-full h-4 border border-white/20 overflow-hidden">
+                            <div 
+                              className={`bg-gradient-to-r ${theme.gradient} h-4 rounded-full transition-all duration-500 shadow-md relative overflow-hidden`}
                     style={{ 
                       width: `${getProgressPercentage(
-                        nftDetails[selectedNFT.tokenId]?.stage || 0, 
-                        nftDetails[selectedNFT.tokenId]?.wateringCount || 0,
-                        nftDetails[selectedNFT.tokenId]?.evolutionThreshold || 0
+                                  nftData.stage || 0, 
+                                  nftData.wateringCount || 0,
+                                  nftData.evolutionThreshold || 0
                       )}%` 
                     }}
-                  ></div>
+                            >
+                              <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                            </div>
+                          </div>
                 </div>
-                <div className="text-sm text-foreground/70">
+                        
+                        <div className={`text-sm font-medium ${theme.accent} bg-white/10 dark:bg-gray-800/10 rounded-xl p-3 border border-white/20`}>
                   {(() => {
                     const needed = getNextEvolutionInfo(
-                      nftDetails[selectedNFT.tokenId]?.stage || 0, 
-                      nftDetails[selectedNFT.tokenId]?.wateringCount || 0,
-                      nftDetails[selectedNFT.tokenId]?.evolutionThreshold || 0
+                              nftData.stage || 0, 
+                              nftData.wateringCount || 0,
+                              nftData.evolutionThreshold || 0
                     );
                     return needed > 0 
-                      ? `Sonraki aşama için ${needed} sulama daha gerekli`
-                      : 'Evrim için hazır veya maksimum aşamada!';
+                              ? `🌱 Sonraki aşama için ${needed} sulama daha gerekli`
+                              : '🏆 Evrim için hazır veya maksimum aşamada!';
                   })()}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Close Button */}
+                    <button
+                      onClick={() => setShowDetailsModal(false)}
+                      className={`w-full bg-gradient-to-r ${theme.gradient} text-white font-bold py-4 px-6 rounded-2xl hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-2xl flex items-center justify-center space-x-3`}
+                    >
+                      <span className="text-xl">✨</span>
+                      <span>Kapat</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          );
+        })()}
         </div>
-      )}
     </div>
   );
 } 

@@ -95,6 +95,24 @@ export default function NFTCard({
                            attr.trait_type === 'Stage Number' || attr.trait_type === 'Stage'
                          ));
 
+    // Debug logging
+    console.log('🎨 NFTCard Theme Debug:', {
+      tokenId: nft?.tokenId,
+      contractAddress: nft?.contractAddress,
+      EVOLVING_NFT_CONTRACT_ADDRESS: EVOLVING_NFT_CONTRACT_ADDRESS,
+      contractMatch: nft?.contractAddress?.toLowerCase() === EVOLVING_NFT_CONTRACT_ADDRESS.toLowerCase(),
+      rawName: rawName,
+      emojiCheck: {
+        hasSeed: rawName.includes('🌰'),
+        hasSprout: rawName.includes('🌱'),
+        hasSapling: rawName.includes('🌿'),
+        hasBloom: rawName.includes('🌸'),
+        hasFruit: rawName.includes('🍎')
+      },
+      metadata: metadata,
+      isEvolvingNFT: isEvolvingNFT
+    });
+
     // Normal NFT için mavi tema
     if (!isEvolvingNFT) {
       return {
@@ -209,7 +227,7 @@ export default function NFTCard({
     }
     setLoadingAction(true);
     try {
-      await onSell(nft.tokenId, sellPrice);
+      await onSell(nft.tokenId, sellPrice, nft);
       setShowSellModal(false);
       setSellPrice('');
     } catch (error) {
@@ -364,23 +382,32 @@ export default function NFTCard({
         <div className={`absolute inset-0 bg-gradient-to-br ${theme.glow} rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`}></div>
       </div>
 
-      {/* Detail Modal */}
+      {/* Detail Modal - Theme Coordinated */}
       {showDetailModal && (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center p-4 z-50">
-          <div className="bg-card-bg border border-border-color rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="relative p-6">
-              {/* Close Button */}
-                              <button
-                  onClick={() => setShowDetailModal(false)}
-                  className="absolute top-4 right-4 w-8 h-8 bg-secondary-accent hover:bg-card-hover rounded-full flex items-center justify-center transition-colors"
-                >
-                  ✕
-                </button>
+          <div className={`relative bg-gradient-to-br ${theme.bgGradient} border-2 ${theme.border} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl backdrop-blur-sm`}>
+            {/* Theme Decorative Elements */}
+            <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl ${theme.glow} rounded-full -translate-y-16 translate-x-16 opacity-20`}></div>
+            <div className={`absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr ${theme.glow} rounded-full translate-y-12 -translate-x-12 opacity-15`}></div>
+            
+            {/* Theme Emoji Decorator */}
+            <div className="absolute top-6 left-6 text-3xl opacity-20">
+              {theme.emoji}
+            </div>
+            
+            <div className="relative p-6 z-10">
+              {/* Close Button - Themed */}
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className={`absolute top-4 right-4 w-10 h-10 bg-gradient-to-r ${theme.gradient} text-white hover:scale-110 rounded-full flex items-center justify-center transition-all shadow-lg font-bold`}
+              >
+                ✕
+              </button>
 
               {/* Content */}
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Image */}
-                <div className="aspect-square relative rounded-xl overflow-hidden">
+              <div className="grid md:grid-cols-2 gap-6 mt-4">
+                {/* Image with Theme Border */}
+                <div className={`aspect-square relative rounded-xl overflow-hidden border-3 ${theme.border} shadow-lg`}>
                   <Image
                     src={imageUrl}
                     alt={nftName}
@@ -388,44 +415,65 @@ export default function NFTCard({
                     className="object-cover"
                     sizes="400px"
                   />
+                  {/* Image Overlay Badge */}
+                  <div className="absolute top-3 right-3">
+                    <span className={`bg-gradient-to-r ${theme.gradient} text-white text-sm px-3 py-1.5 rounded-full font-medium shadow-lg backdrop-blur-sm`}>
+                      {theme.emoji} {theme.stage === 'NFT' ? 'NFT' : `Stage ${theme.stage + 1}`}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Details */}
+                {/* Details with Theme Colors */}
                 <div>
-                  <h2 className="text-2xl font-bold mb-4 text-foreground">{nftName}</h2>
+                  <h2 className={`text-3xl font-bold mb-4 ${theme.accent} flex items-center`}>
+                    {theme.emoji} {nftName}
+                  </h2>
                   
-                  <div className="space-y-3 mb-6">
-                    <div>
-                      <span className="text-sm font-medium text-text-muted">Token ID:</span>
-                      <p className="text-lg text-foreground">#{nft?.tokenId}</p>
+                  {/* Info Cards with Theme */}
+                  <div className="space-y-4 mb-6">
+                    <div className={`p-4 bg-white/40 dark:bg-gray-800/40 rounded-xl backdrop-blur-sm border ${theme.border}/50`}>
+                      <span className={`text-sm font-bold ${theme.accent} flex items-center mb-1`}>
+                        🏷️ Token ID
+                      </span>
+                      <p className="text-xl font-mono font-bold text-foreground">#{nft?.tokenId}</p>
                     </div>
                     
-                    <div>
-                      <span className="text-sm font-medium text-text-muted">Açıklama:</span>
-                      <p className="text-foreground">{nftDescription}</p>
+                    <div className={`p-4 bg-white/40 dark:bg-gray-800/40 rounded-xl backdrop-blur-sm border ${theme.border}/50`}>
+                      <span className={`text-sm font-bold ${theme.accent} flex items-center mb-2`}>
+                        📝 Açıklama
+                      </span>
+                      <p className="text-foreground leading-relaxed">{nftDescription}</p>
                     </div>
 
                     {nft?.seller && (
-                      <div>
-                        <span className="text-sm font-medium text-text-muted">Satıcı:</span>
-                        <p className="font-mono text-sm text-foreground">{nft.seller}</p>
+                      <div className={`p-4 bg-white/40 dark:bg-gray-800/40 rounded-xl backdrop-blur-sm border ${theme.border}/50`}>
+                        <span className={`text-sm font-bold ${theme.accent} flex items-center mb-2`}>
+                          👤 Satıcı
+                        </span>
+                        <p className="font-mono text-sm text-foreground bg-background/50 px-3 py-1 rounded-lg">
+                          {nft.seller}
+                        </p>
                       </div>
                     )}
 
                     {isListed && nft?.price && (
-                      <div>
-                        <span className="text-sm font-medium text-text-muted">Fiyat:</span>
-                        <p className="text-3xl font-bold text-primary-accent">{nft.price} ETH</p>
+                      <div className={`p-4 bg-gradient-to-r ${theme.glow} rounded-xl backdrop-blur-sm border ${theme.border} shadow-lg`}>
+                        <span className={`text-sm font-bold ${theme.accent} flex items-center mb-2`}>
+                          💰 Fiyat
+                        </span>
+                        <p className={`text-4xl font-bold ${theme.accent} flex items-center`}>
+                          {nft.price} ETH
+                        </p>
                       </div>
                     )}
                   </div>
 
-                  {/* Action Buttons */}
+                  {/* Action Buttons - Themed */}
                   <div className="flex gap-3 flex-wrap">
                     {isOwned && !isListed && onSell && (
                       <button 
                         onClick={handleInitiateSell}
-                        className="btn-sell flex-1 min-w-[120px] hover:scale-105"
+                        className={`flex-1 min-w-[120px] bg-gradient-to-r ${theme.gradient} text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition-all shadow-lg flex items-center justify-center`}
                       >
                         🛍️ Satışa Çıkar
                       </button>
@@ -435,62 +483,109 @@ export default function NFTCard({
                       <button 
                         onClick={executeBuy}
                         disabled={loadingAction}
-                        className="btn-success flex-1 min-w-[120px] hover:scale-105 disabled:opacity-50"
+                        className={`flex-1 min-w-[120px] bg-gradient-to-r ${theme.gradient} text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition-all shadow-lg disabled:opacity-50 flex items-center justify-center`}
                       >
-                        {loadingAction ? 'Alınıyor...' : '💰 Satın Al'}
+                        {loadingAction ? (
+                          <>
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                            Alınıyor...
+                          </>
+                        ) : (
+                          '💰 Satın Al'
+                        )}
                       </button>
                     )}
 
                     {isListed && isOwnerOfListedItem && onCancel && (
-                        <button 
-                          onClick={executeCancelListing}
-                          disabled={loadingAction}
-                          className="btn-danger flex-1 min-w-[120px] hover:scale-105 disabled:opacity-50"
-                        >
-                          {loadingAction ? 'İptal Ediliyor...' : '❌ Satışı İptal Et'}
-                        </button>
-                      )}
+                      <button 
+                        onClick={executeCancelListing}
+                        disabled={loadingAction}
+                        className="flex-1 min-w-[120px] bg-gradient-to-r from-red-500 to-red-600 text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition-all shadow-lg disabled:opacity-50 flex items-center justify-center"
+                      >
+                        {loadingAction ? (
+                          <>
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                            İptal Ediliyor...
+                          </>
+                        ) : (
+                          '❌ Satışı İptal Et'
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
+            
+            {/* Modal Background Glow Effect */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${theme.glow} rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-500 pointer-events-none`}></div>
           </div>
         </div>
       )}
 
-      {/* Sell Modal */}
+      {/* Sell Modal - Theme Coordinated */}
       {showSellModal && (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center p-4 z-50">
-          <div className="bg-card-bg border border-border-color p-6 rounded-xl shadow-2xl w-full max-w-md">
-            <h4 className="text-xl font-semibold mb-4 text-foreground">🛍️ NFT'yi Satışa Çıkar</h4>
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2 text-foreground">Satış Fiyatı (ETH)</label>
-              <input 
-                type="number" 
-                value={sellPrice} 
-                onChange={(e) => setSellPrice(e.target.value)} 
-                placeholder="0.1"
-                step="0.01"
-                min="0.0001"
-                className="w-full px-3 py-2 border border-border-color rounded-lg focus:ring-2 focus:ring-primary-accent focus:border-transparent bg-secondary-accent text-foreground"
-              />
+          <div className={`relative bg-gradient-to-br ${theme.bgGradient} border-2 ${theme.border} p-6 rounded-2xl shadow-2xl w-full max-w-md backdrop-blur-sm`}>
+            {/* Theme Decorative Elements */}
+            <div className={`absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl ${theme.glow} rounded-full -translate-y-10 translate-x-10 opacity-20`}></div>
+            <div className={`absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr ${theme.glow} rounded-full translate-y-8 -translate-x-8 opacity-15`}></div>
+            
+            {/* Theme Emoji Decorator */}
+            <div className="absolute top-4 left-4 text-2xl opacity-20">
+              {theme.emoji}
             </div>
-            <div className="flex gap-3">
-              <button 
-                onClick={() => setShowSellModal(false)} 
-                disabled={loadingAction}
-                className="flex-1 btn-secondary disabled:opacity-50"
-              >
-                İptal
-              </button>
-              <button 
-                onClick={executeSell} 
-                disabled={loadingAction || !sellPrice}
-                className="flex-1 btn-sell disabled:opacity-50"
-              >
-                {loadingAction ? 'İşleniyor...' : 'Satışa Çıkar'}
-              </button>
+            
+            <div className="relative z-10">
+              <h4 className={`text-2xl font-bold mb-6 ${theme.accent} flex items-center`}>
+                🛍️ NFT'yi Satışa Çıkar
+              </h4>
+              
+              <div className="mb-6">
+                <label className={`block text-sm font-bold mb-3 ${theme.accent} flex items-center`}>
+                  💰 Satış Fiyatı (ETH)
+                </label>
+                <input 
+                  type="number" 
+                  value={sellPrice} 
+                  onChange={(e) => setSellPrice(e.target.value)} 
+                  placeholder="0.1"
+                  step="0.01"
+                  min="0.0001"
+                  className={`w-full px-4 py-3 border-2 ${theme.border} rounded-xl focus:ring-4 focus:ring-primary-accent/30 focus:border-transparent bg-white/50 dark:bg-gray-800/50 text-foreground font-medium text-lg backdrop-blur-sm transition-all`}
+                />
+                <p className="text-xs text-foreground/60 mt-2 flex items-center">
+                  ℹ️ Minimum: 0.0001 ETH
+                </p>
+              </div>
+              
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => setShowSellModal(false)} 
+                  disabled={loadingAction}
+                  className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-xl transition-all disabled:opacity-50 hover:scale-105 shadow-lg"
+                >
+                  ❌ İptal
+                </button>
+                <button 
+                  onClick={executeSell} 
+                  disabled={loadingAction || !sellPrice}
+                  className={`flex-1 bg-gradient-to-r ${theme.gradient} text-white font-bold py-3 px-6 rounded-xl transition-all disabled:opacity-50 hover:scale-105 shadow-lg flex items-center justify-center`}
+                >
+                  {loadingAction ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      İşleniyor...
+                    </>
+                  ) : (
+                    '🛍️ Satışa Çıkar'
+                  )}
+                </button>
+              </div>
             </div>
+            
+            {/* Modal Background Glow Effect */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${theme.glow} rounded-2xl opacity-10 transition-opacity duration-500 pointer-events-none`}></div>
           </div>
         </div>
       )}

@@ -80,12 +80,16 @@ export default function MyNFTsPage() {
   };
 
   // NFTCard için uyumlu sell fonksiyonu
-  const handleSellFromCard = async (tokenId, price) => {
-    console.log('🛍️ [SELL FROM CARD] Attempting to sell:', { tokenId, price });
+  const handleSellFromCard = async (tokenId, price, nftData) => {
+    console.log('🛍️ [SELL FROM CARD] Attempting to sell:', { tokenId, price, nftData });
     
     setProcessing(true);
     try {
-      const result = await web3Service.sellNFT(tokenId, price);
+      // NFT'nin contract adresini belirle
+      const contractAddress = nftData?.contractAddress;
+      console.log('🛍️ [SELL FROM CARD] Using contract address:', contractAddress);
+      
+      const result = await web3Service.sellNFT(tokenId, price, contractAddress);
       console.log('🛍️ [SELL FROM CARD] Result:', result);
       
       if (result.success) {
@@ -176,7 +180,7 @@ export default function MyNFTsPage() {
 
     setProcessing(true);
     try {
-      const result = await web3Service.sellNFT(selectedNFT.tokenId, sellPrice);
+      const result = await web3Service.sellNFT(selectedNFT.tokenId, sellPrice, selectedNFT.contractAddress);
       console.log('🛍️ [SELL DEBUG] SellNFT result:', result);
       
       if (result.success) {
@@ -216,271 +220,543 @@ export default function MyNFTsPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-12 text-center">
-        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary-accent border-r-transparent"></div>
+      <div className="min-h-screen bg-gradient-to-br from-background via-secondary-accent/20 to-tertiary-accent/10 flex items-center justify-center">
+        <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl rounded-3xl p-12 shadow-4xl border border-white/30 dark:border-gray-700/30 overflow-hidden">
+          {/* Animated Background Elements */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-4 right-4 w-32 h-32 bg-primary-accent/10 rounded-full filter blur-3xl animate-blob"></div>
+            <div className="absolute bottom-4 left-4 w-24 h-24 bg-blue-500/10 rounded-full filter blur-2xl animate-blob animation-delay-2000"></div>
+          </div>
+          
+          <div className="relative z-10 text-center">
+            <div className="w-20 h-20 bg-gradient-to-br from-primary-accent/20 to-blue-500/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
+              <div className="w-8 h-8 border-2 border-primary-accent border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-primary-accent to-blue-500 bg-clip-text text-transparent mb-4">
+              Koleksiyonunuz Yükleniyor...
+            </h2>
+            <p className="text-foreground/70">
+              NFT'leriniz blockchain'den getiriliyor
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!account) {
     return (
-      <div className="container mx-auto px-4 py-12 text-center">
-        <div className="bg-secondary-accent rounded-lg p-8 max-w-md mx-auto shadow-lg">
-          <div className="text-6xl mb-4">🔐</div>
-          <h2 className="text-2xl font-bold text-foreground mb-4">Cüzdan Bağlantısı Gerekli</h2>
-          <p className="text-foreground/70 mb-6">NFT'lerinizi görüntülemek için cüzdanınızı bağlayın.</p>
-          <button
-            onClick={connectWallet}
-            className="bg-primary-accent text-background px-6 py-3 rounded-lg font-medium hover:brightness-90 transition-all"
-          >
-            🔗 Cüzdan Bağla
-          </button>
+      <div className="min-h-screen bg-gradient-to-br from-background via-secondary-accent/20 to-tertiary-accent/10 flex items-center justify-center">
+        <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl rounded-3xl p-12 max-w-lg mx-4 shadow-4xl border border-white/30 dark:border-gray-700/30 overflow-hidden">
+          {/* Animated Background Elements */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-4 right-4 w-32 h-32 bg-primary-accent/10 rounded-full filter blur-3xl animate-blob"></div>
+            <div className="absolute bottom-4 left-4 w-24 h-24 bg-blue-500/10 rounded-full filter blur-2xl animate-blob animation-delay-2000"></div>
+          </div>
+          
+          <div className="relative z-10 text-center">
+            <div className="w-20 h-20 bg-gradient-to-br from-primary-accent/20 to-blue-500/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
+              <span className="text-4xl">🔐</span>
+            </div>
+            
+            <h2 className="text-3xl font-black text-foreground mb-4">Cüzdan Bağlantısı Gerekli</h2>
+            <p className="text-foreground/70 mb-8 text-lg">
+              NFT koleksiyonunuzu görüntülemek için MetaMask cüzdanınızı bağlayın.
+            </p>
+            
+            <button
+              onClick={connectWallet}
+              className="group px-8 py-4 bg-gradient-to-r from-primary-accent to-blue-500 text-white rounded-2xl font-bold transition-all duration-300 hover:scale-105 hover:shadow-2xl border border-white/30 backdrop-blur-sm"
+            >
+              <div className="flex items-center space-x-3">
+                <span className="text-xl group-hover:scale-125 transition-transform duration-300">🔗</span>
+                <span>MetaMask Bağla</span>
+                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </div>
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-foreground mb-3">💎 NFT Koleksiyonum</h1>
-        <p className="text-foreground/70 text-lg">Sahip olduğunuz ve sattığınız NFT'leri yönetin</p>
+    <div className="min-h-screen bg-gradient-to-br from-background via-secondary-accent/20 to-tertiary-accent/10">
+      {/* Ultra Modern Hero Section */}
+      <div className="relative overflow-hidden">
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-20 left-1/4 w-64 h-64 bg-blue-500/10 rounded-full filter blur-3xl animate-blob"></div>
+          <div className="absolute top-40 right-1/4 w-80 h-80 bg-primary-accent/10 rounded-full filter blur-3xl animate-blob animation-delay-2000"></div>
+          <div className="absolute bottom-20 left-1/3 w-96 h-96 bg-purple-500/10 rounded-full filter blur-3xl animate-blob animation-delay-4000"></div>
+        </div>
+
+        <div className="relative container mx-auto px-4 py-8 max-w-7xl">
+          {/* Compact Hero Header */}
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center space-x-4 mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-primary-accent/20 backdrop-blur-sm rounded-2xl border border-white/30 dark:border-gray-700/30 flex items-center justify-center">
+                <span className="text-2xl">💎</span>
+              </div>
+              
+              <div className="text-left">
+                <h1 className="text-2xl md:text-3xl font-black">
+                  <span className="bg-gradient-to-r from-blue-500 via-primary-accent to-purple-500 bg-clip-text text-transparent">
+                    My NFT Collection
+                  </span>
+                </h1>
+                <p className="text-sm text-foreground/70">
+                  Koleksiyonunuzu yönetin ve keşfedin
+                </p>
+              </div>
+            </div>
+
+            {/* Compact Account Info */}
+            <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl rounded-2xl p-4 border border-white/30 dark:border-gray-700/30 max-w-lg mx-auto overflow-hidden">
+              {/* Animated Background Elements */}
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-1 right-2 w-12 h-12 bg-primary-accent/10 rounded-full filter blur-xl animate-blob"></div>
+                <div className="absolute bottom-1 left-2 w-10 h-10 bg-blue-500/10 rounded-full filter blur-lg animate-blob animation-delay-2000"></div>
+              </div>
+              
+                             <div className="relative z-10 flex items-center justify-center space-x-3">
+                 <div className="w-8 h-8 bg-gradient-to-br from-primary-accent/20 to-blue-500/20 rounded-xl flex items-center justify-center">
+                   <span className="text-lg">🔗</span>
+                 </div>
+                 
+                 <div className="text-left">
+                   <p className="text-xs font-medium text-foreground/60">Bağlı Cüzdan</p>
+                   <p className="font-mono text-foreground text-sm break-all">
+                     {account}
+                   </p>
+                 </div>
+               </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Account Info */}
-      <div className="bg-secondary-accent rounded-lg p-4 mb-6 text-center">
-        <p className="text-sm text-foreground/70 mb-1">Bağlı Cüzdan:</p>
-        <p className="font-mono text-foreground">{account}</p>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex space-x-1 mb-8 bg-background/50 p-1 rounded-lg">
-          <button
-            onClick={() => setActiveTab('owned')}
-          className={`flex-1 py-3 px-4 rounded-md font-medium transition-all ${
+      {/* Ultra Modern Tabs */}
+      <div className="relative container mx-auto px-4 max-w-4xl mb-12">
+        <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl rounded-3xl p-2 border border-white/30 dark:border-gray-700/30 overflow-hidden">
+          {/* Animated Background Elements */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-1 right-2 w-16 h-16 bg-primary-accent/10 rounded-full filter blur-xl animate-blob"></div>
+            <div className="absolute bottom-1 left-2 w-12 h-12 bg-blue-500/10 rounded-full filter blur-lg animate-blob animation-delay-2000"></div>
+          </div>
+          
+          <div className="relative z-10 flex space-x-2">
+            <button
+              onClick={() => setActiveTab('owned')}
+              className={`group flex-1 py-4 px-6 rounded-2xl font-bold text-lg transition-all duration-300 ${
                 activeTab === 'owned'
-              ? 'bg-primary-accent text-background shadow-md'
-              : 'text-foreground/70 hover:text-foreground hover:bg-background/50'
-            }`}
-          >
-          🏠 Sahip Olduklarım ({nfts.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('listed')}
-          className={`flex-1 py-3 px-4 rounded-md font-medium transition-all ${
+                  ? 'bg-gradient-to-r from-blue-500 to-primary-accent text-white shadow-2xl scale-105'
+                  : 'text-foreground/70 hover:text-foreground hover:bg-white/20 dark:hover:bg-gray-800/30 hover:scale-102'
+              }`}
+            >
+              <div className="flex items-center justify-center space-x-3">
+                <span className={`text-2xl transition-transform duration-300 ${activeTab === 'owned' ? 'scale-125' : 'group-hover:scale-110'}`}>🏠</span>
+                <span>Sahip Olduklarım</span>
+                <span className={`px-2 py-1 rounded-xl text-sm font-bold transition-all duration-300 ${
+                  activeTab === 'owned' 
+                    ? 'bg-white/20 text-white' 
+                    : 'bg-primary-accent/20 text-primary-accent'
+                }`}>
+                  {nfts.length}
+                </span>
+              </div>
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('listed')}
+              className={`group flex-1 py-4 px-6 rounded-2xl font-bold text-lg transition-all duration-300 ${
                 activeTab === 'listed'
-              ? 'bg-primary-accent text-background shadow-md'
-              : 'text-foreground/70 hover:text-foreground hover:bg-background/50'
-            }`}
-          >
-          🛍️ Satışta ({listings.length})
-          </button>
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-2xl scale-105'
+                  : 'text-foreground/70 hover:text-foreground hover:bg-white/20 dark:hover:bg-gray-800/30 hover:scale-102'
+              }`}
+            >
+              <div className="flex items-center justify-center space-x-3">
+                <span className={`text-2xl transition-transform duration-300 ${activeTab === 'listed' ? 'scale-125' : 'group-hover:scale-110'}`}>🛍️</span>
+                <span>Satışta</span>
+                <span className={`px-2 py-1 rounded-xl text-sm font-bold transition-all duration-300 ${
+                  activeTab === 'listed' 
+                    ? 'bg-white/20 text-white' 
+                    : 'bg-purple-500/20 text-purple-500'
+                }`}>
+                  {listings.length}
+                </span>
+              </div>
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Content */}
-      {activeTab === 'owned' ? (
-        <div>
-          {nfts.length > 0 ? (
-            <>
-              {/* Quick Actions */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div className="bg-green-100 dark:bg-green-900/30 border border-green-400 text-green-700 dark:text-green-300 p-4 rounded-lg text-center">
-                  <div className="text-2xl mb-2">🌱</div>
-                  <p className="font-medium">Bahçeye Transfer Et</p>
-                  <p className="text-xs opacity-75">NFT'leri bahçenizde sulayın</p>
+      {/* Modern Content Container */}
+      <div className="relative container mx-auto px-4 max-w-7xl">
+        {activeTab === 'owned' ? (
+          <div>
+            {nfts.length > 0 ? (
+              <div className="relative bg-white/5 dark:bg-gray-900/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20 dark:border-gray-700/20 overflow-hidden">
+                {/* Animated Background Elements */}
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute top-4 right-4 w-32 h-32 bg-blue-500/5 rounded-full filter blur-2xl animate-blob"></div>
+                  <div className="absolute bottom-4 left-4 w-24 h-24 bg-primary-accent/5 rounded-full filter blur-xl animate-blob animation-delay-2000"></div>
                 </div>
-                <div className="bg-blue-100 dark:bg-blue-900/30 border border-blue-400 text-blue-700 dark:text-blue-300 p-4 rounded-lg text-center">
-                  <div className="text-2xl mb-2">🛍️</div>
-                  <p className="font-medium">Satışa Çıkar</p>
-                  <p className="text-xs opacity-75">Marketplace'te sat</p>
-                </div>
-                <div className="bg-purple-100 dark:bg-purple-900/30 border border-purple-400 text-purple-700 dark:text-purple-300 p-4 rounded-lg text-center">
-                  <div className="text-2xl mb-2">📨</div>
-                  <p className="font-medium">Transfer Et</p>
-                  <p className="text-xs opacity-75">Başka cüzdana gönder</p>
+                
+                <div className="relative z-10">
+                  {/* Collection Header */}
+                  <div className="text-center mb-8">
+                    <h2 className="text-2xl font-black bg-gradient-to-r from-blue-500 to-primary-accent bg-clip-text text-transparent mb-2">
+                      Koleksiyonunuz
+                    </h2>
+                    <p className="text-foreground/70">
+                      {nfts.length} NFT'niz var • Her biri benzersiz bir hikaye anlatır
+                    </p>
+                  </div>
+
+                  {/* Enhanced NFT Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
+                    {nfts.map((nft) => (
+                      <NFTCard
+                        key={nft.tokenId}
+                        nft={nft}
+                        isOwned={true}
+                        currentAccount={account}
+                        onSell={handleSellFromCard}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
-
-              {/* NFT Grid - Daha kompakt */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4">
-            {nfts.map((nft) => (
-              <NFTCard
-                key={nft.tokenId}
-                nft={nft}
-                isOwned={true}
-                currentAccount={account}
-                    onSell={handleSellFromCard}
-              />
-            ))}
-          </div>
-            </>
-        ) : (
-          <div className="text-center py-12 bg-secondary-accent rounded-xl shadow">
-              <div className="text-6xl mb-4">🌟</div>
-              <h3 className="text-2xl font-semibold text-foreground mb-3">Henüz NFT'niz Yok</h3>
-              <p className="text-foreground/70 mb-6 max-w-md mx-auto">
-                Marketplace'ten NFT satın alın veya kendi NFT'nizi oluşturun.
-            </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a 
-                  href="/"
-                  className="btn-primary hover:scale-105"
-                >
-                  🛒 Marketplace'e Git
-                </a>
-                <a 
-              href="/mint" 
-                  className="btn-success hover:scale-105"
-            >
-                  🌱 NFT Oluştur
-                </a>
-              </div>
-            </div>
-          )}
-          </div>
-      ) : (
-        <div>
-          {listings.length > 0 ? (
-                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4">
-          {listings.map((listing) => (
-            <NFTCard
-              key={listing.listingId}
-              nft={listing}
-              isListed={true}
-              onCancel={handleCancel}
-              onBuy={null}
-              currentAccount={account}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-12 bg-secondary-accent rounded-xl shadow">
-          <div className="text-5xl mb-4">🍂</div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">Satışta Hiçbir Varlığınız Yok</h3>
-              <p className="text-foreground/70 mb-6">Sahip olduğunuz NFT'lerden bazılarını satışa çıkarabilirsiniz.</p>
-          {nfts.length > 0 && (
-            <button 
-              onClick={() => setActiveTab('owned')} 
-                  className="btn-primary hover:scale-105"
-            > 
-              Sahip Olduklarımı Göster 
-            </button> 
-          )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Transfer Modal */}
-      {showTransferModal && selectedNFT && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-secondary-accent rounded-lg p-6 max-w-md w-full shadow-2xl">
-            <h3 className="text-xl font-bold text-foreground mb-4">
-              {transferAddress.startsWith('garden-') ? '🌱 Bahçeye Transfer' : '📨 NFT Transfer'}
-            </h3>
-            
-            <div className="bg-background/50 rounded-lg p-4 mb-4">
-              <p className="text-sm text-foreground/70 mb-1">NFT:</p>
-              <p className="font-semibold text-foreground">{selectedNFT.name || 'İsimsiz NFT'}</p>
-              <p className="text-sm text-foreground/70 mt-2">Token ID: {selectedNFT.tokenId}</p>
-            </div>
-
-            {!transferAddress.startsWith('garden-') && (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-foreground mb-2">Hedef Cüzdan Adresi:</label>
-                <input
-                  type="text"
-                  value={transferAddress}
-                  onChange={(e) => setTransferAddress(e.target.value)}
-                  placeholder="0x..."
-                  className="w-full px-3 py-2 bg-background border border-primary-accent/50 rounded-md"
-                />
+            ) : (
+              <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl rounded-3xl p-12 text-center border border-white/30 dark:border-gray-700/30 overflow-hidden">
+                {/* Animated Background Elements */}
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute top-4 right-4 w-32 h-32 bg-primary-accent/10 rounded-full filter blur-3xl animate-blob"></div>
+                  <div className="absolute bottom-4 left-4 w-24 h-24 bg-blue-500/10 rounded-full filter blur-2xl animate-blob animation-delay-2000"></div>
+                </div>
+                
+                <div className="relative z-10">
+                  <div className="w-20 h-20 bg-gradient-to-br from-primary-accent/20 to-blue-500/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                    <span className="text-4xl">🌟</span>
+                  </div>
+                  
+                  <h3 className="text-3xl font-black text-foreground mb-4">Henüz NFT'niz Yok</h3>
+                  <p className="text-foreground/70 mb-8 max-w-md mx-auto text-lg">
+                    Marketplace'ten NFT satın alın veya kendi NFT'nizi oluşturun.
+                  </p>
+                  
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a 
+                      href="/"
+                      className="group px-8 py-4 bg-gradient-to-r from-primary-accent to-blue-500 text-white rounded-2xl font-bold transition-all duration-300 hover:scale-105 hover:shadow-2xl border border-white/30 backdrop-blur-sm"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <span className="text-xl group-hover:scale-125 transition-transform duration-300">🛒</span>
+                        <span>Marketplace'e Git</span>
+                        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                      </div>
+                    </a>
+                    
+                    <a 
+                      href="/mint" 
+                      className="group px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-2xl font-bold transition-all duration-300 hover:scale-105 hover:shadow-2xl border border-white/30 backdrop-blur-sm"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <span className="text-xl group-hover:scale-125 transition-transform duration-300">🌱</span>
+                        <span>NFT Oluştur</span>
+                        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                      </div>
+                    </a>
+                  </div>
+                </div>
               </div>
             )}
+          </div>
+              ) : (
+          <div>
+            {listings.length > 0 ? (
+              <div className="relative bg-white/5 dark:bg-gray-900/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20 dark:border-gray-700/20 overflow-hidden">
+                {/* Animated Background Elements */}
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute top-4 right-4 w-32 h-32 bg-purple-500/5 rounded-full filter blur-2xl animate-blob"></div>
+                  <div className="absolute bottom-4 left-4 w-24 h-24 bg-pink-500/5 rounded-full filter blur-xl animate-blob animation-delay-2000"></div>
+                </div>
+                
+                <div className="relative z-10">
+                  {/* Listed Collection Header */}
+                  <div className="text-center mb-8">
+                    <h2 className="text-2xl font-black bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent mb-2">
+                      Satışta Olanlar
+                    </h2>
+                    <p className="text-foreground/70">
+                      {listings.length} NFT satışta • Marketplace'te görünüyor
+                    </p>
+                  </div>
 
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowTransferModal(false);
-                  setSelectedNFT(null);
-                  setTransferAddress('');
-                }}
-                disabled={processing}
-                className="flex-1 bg-gray-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-600 transition-colors disabled:opacity-50"
-              >
-                ❌ İptal
-              </button>
-              <button
-                onClick={confirmTransfer}
-                disabled={processing || (!transferAddress.trim())}
-                className="flex-1 btn-primary disabled:opacity-50 flex items-center justify-center"
-              >
-                {processing ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin mr-2"></div>
-                    İşleniyor...
-                  </>
-                ) : (
-                  transferAddress.startsWith('garden-') ? '🌱 Bahçeye Gönder' : '📨 Transfer Et'
-                )}
-              </button>
+                  {/* Enhanced Listed NFT Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
+                    {listings.map((listing) => (
+                      <NFTCard
+                        key={listing.listingId}
+                        nft={listing}
+                        isListed={true}
+                        onCancel={handleCancel}
+                        onBuy={null}
+                        currentAccount={account}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl rounded-3xl p-12 text-center border border-white/30 dark:border-gray-700/30 overflow-hidden">
+                {/* Animated Background Elements */}
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute top-4 right-4 w-32 h-32 bg-purple-500/10 rounded-full filter blur-3xl animate-blob"></div>
+                  <div className="absolute bottom-4 left-4 w-24 h-24 bg-pink-500/10 rounded-full filter blur-2xl animate-blob animation-delay-2000"></div>
+                </div>
+                
+                <div className="relative z-10">
+                  <div className="w-20 h-20 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                    <span className="text-4xl">🍂</span>
+                  </div>
+                  
+                  <h3 className="text-3xl font-black text-foreground mb-4">Satışta Hiçbir Varlığınız Yok</h3>
+                  <p className="text-foreground/70 mb-8 max-w-md mx-auto text-lg">
+                    Sahip olduğunuz NFT'lerden bazılarını satışa çıkarabilirsiniz.
+                  </p>
+                  
+                  {nfts.length > 0 && (
+                    <button 
+                      onClick={() => setActiveTab('owned')} 
+                      className="group px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl font-bold transition-all duration-300 hover:scale-105 hover:shadow-2xl border border-white/30 backdrop-blur-sm"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <span className="text-xl group-hover:scale-125 transition-transform duration-300">🏠</span>
+                        <span>Sahip Olduklarımı Göster</span>
+                        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                      </div>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Ultra Modern Transfer Modal */}
+      {showTransferModal && selectedNFT && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-3xl rounded-3xl p-8 max-w-lg w-full shadow-4xl border border-white/30 dark:border-gray-700/30 overflow-hidden">
+            {/* Animated Background Elements */}
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute top-4 right-4 w-32 h-32 bg-blue-500/10 rounded-full filter blur-3xl animate-blob"></div>
+              <div className="absolute bottom-4 left-4 w-24 h-24 bg-green-500/10 rounded-full filter blur-2xl animate-blob animation-delay-2000"></div>
+            </div>
+            
+            <div className="relative z-10">
+              {/* Header */}
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-green-500/20 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                  <span className="text-3xl">{transferAddress.startsWith('garden-') ? '🌱' : '📨'}</span>
+                </div>
+                <h3 className="text-2xl font-black bg-gradient-to-r from-blue-500 to-green-500 bg-clip-text text-transparent mb-2">
+                  {transferAddress.startsWith('garden-') ? 'Bahçeye Transfer' : 'NFT Transfer'}
+                </h3>
+                <p className="text-foreground/70">NFT'nizi transfer etmek istediğinizden emin misiniz?</p>
+              </div>
+              
+              {/* NFT Details Card */}
+              <div className="bg-white/20 dark:bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 mb-6 border border-white/20 dark:border-gray-600/20">
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm font-medium text-foreground/60 mb-1">NFT Adı</p>
+                    <p className="font-bold text-lg text-foreground">{selectedNFT.name || 'İsimsiz NFT'}</p>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm font-medium text-foreground/60 mb-1">Token ID</p>
+                    <p className="font-mono text-sm text-foreground bg-white/20 dark:bg-gray-700/30 rounded-lg px-3 py-2">
+                      #{selectedNFT.tokenId}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {!transferAddress.startsWith('garden-') && (
+                <div className="mb-6">
+                  <label className="block text-sm font-bold text-foreground/90 mb-3 flex items-center">
+                    <span className="mr-2">🎯</span>
+                    Hedef Cüzdan Adresi
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={transferAddress}
+                      onChange={(e) => setTransferAddress(e.target.value)}
+                      placeholder="0x..."
+                      className="w-full px-4 py-3 bg-white/20 dark:bg-gray-800/40 backdrop-blur-sm border border-white/30 dark:border-gray-600/30 rounded-2xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300 text-foreground placeholder-foreground/50 font-mono"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-green-500/5 rounded-2xl pointer-events-none"></div>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-4">
+                <button
+                  onClick={() => {
+                    setShowTransferModal(false);
+                    setSelectedNFT(null);
+                    setTransferAddress('');
+                  }}
+                  disabled={processing}
+                  className="group flex-1 px-6 py-4 bg-white/20 dark:bg-gray-800/40 backdrop-blur-sm border border-white/30 dark:border-gray-600/30 rounded-2xl font-bold text-foreground hover:bg-white/30 dark:hover:bg-gray-700/50 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <span className="text-lg group-hover:scale-125 transition-transform duration-300">❌</span>
+                    <span>İptal</span>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={confirmTransfer}
+                  disabled={processing || (!transferAddress.trim())}
+                  className="group flex-1 px-6 py-4 bg-gradient-to-r from-blue-500 to-green-500 text-white rounded-2xl font-bold transition-all duration-300 hover:scale-105 hover:shadow-2xl disabled:opacity-50 disabled:hover:scale-100 border border-white/30 backdrop-blur-sm"
+                >
+                  {processing ? (
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"></div>
+                      <span>İşleniyor...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center space-x-2">
+                      <span className="text-lg group-hover:scale-125 transition-transform duration-300">
+                        {transferAddress.startsWith('garden-') ? '🌱' : '📨'}
+                      </span>
+                      <span>{transferAddress.startsWith('garden-') ? 'Bahçeye Gönder' : 'Transfer Et'}</span>
+                    </div>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Sell Modal */}
+      {/* Ultra Modern Sell Modal */}
       {showSellModal && selectedNFT && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-secondary-accent rounded-lg p-6 max-w-md w-full shadow-2xl">
-            <h3 className="text-xl font-bold text-foreground mb-4">🛍️ NFT Satışa Çıkar</h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-3xl rounded-3xl p-8 max-w-lg w-full shadow-4xl border border-white/30 dark:border-gray-700/30 overflow-hidden">
+            {/* Animated Background Elements */}
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute top-4 right-4 w-32 h-32 bg-purple-500/10 rounded-full filter blur-3xl animate-blob"></div>
+              <div className="absolute bottom-4 left-4 w-24 h-24 bg-pink-500/10 rounded-full filter blur-2xl animate-blob animation-delay-2000"></div>
+            </div>
             
-            <div className="bg-background/50 rounded-lg p-4 mb-4">
-              <p className="text-sm text-foreground/70 mb-1">NFT:</p>
-              <p className="font-semibold text-foreground">{selectedNFT.name || 'İsimsiz NFT'}</p>
-              <p className="text-sm text-foreground/70 mt-2">Token ID: {selectedNFT.tokenId}</p>
-            </div>
+            <div className="relative z-10">
+              {/* Header */}
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                  <span className="text-3xl">🛍️</span>
+                </div>
+                <h3 className="text-2xl font-black bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent mb-2">
+                  NFT Satışa Çıkar
+                </h3>
+                <p className="text-foreground/70">NFT'nizi marketplace'te satmak istediğinizden emin misiniz?</p>
+              </div>
+              
+              {/* NFT Details Card */}
+              <div className="bg-white/20 dark:bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 mb-6 border border-white/20 dark:border-gray-600/20">
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm font-medium text-foreground/60 mb-1">NFT Adı</p>
+                    <p className="font-bold text-lg text-foreground">{selectedNFT.name || 'İsimsiz NFT'}</p>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm font-medium text-foreground/60 mb-1">Token ID</p>
+                    <p className="font-mono text-sm text-foreground bg-white/20 dark:bg-gray-700/30 rounded-lg px-3 py-2">
+                      #{selectedNFT.tokenId}
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-foreground mb-2">Satış Fiyatı (ETH):</label>
-              <input
-                type="number"
-                step="0.001"
-                min="0.001"
-                value={sellPrice}
-                onChange={(e) => setSellPrice(e.target.value)}
-                placeholder="0.01"
-                className="w-full px-3 py-2 bg-background border border-primary-accent/50 rounded-md"
-              />
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowSellModal(false);
-                  setSelectedNFT(null);
-                  setSellPrice('');
-                }}
-                disabled={processing}
-                className="flex-1 bg-gray-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-600 transition-colors disabled:opacity-50"
-              >
-                ❌ İptal
-              </button>
-              <button
-                onClick={confirmSell}
-                disabled={processing || !sellPrice || parseFloat(sellPrice) <= 0}
-                className="flex-1 btn-sell disabled:opacity-50 flex items-center justify-center hover:scale-105"
-              >
-                {processing ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin mr-2"></div>
-                    İşleniyor...
-                  </>
-                ) : (
-                  '🛍️ Satışa Çıkar'
+              {/* Price Input */}
+              <div className="mb-6">
+                <label className="block text-sm font-bold text-foreground/90 mb-3 flex items-center">
+                  <span className="mr-2">💰</span>
+                  Satış Fiyatı (ETH)
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.001"
+                    min="0.001"
+                    value={sellPrice}
+                    onChange={(e) => setSellPrice(e.target.value)}
+                    placeholder="0.01"
+                    className="w-full px-4 py-3 bg-white/20 dark:bg-gray-800/40 backdrop-blur-sm border border-white/30 dark:border-gray-600/30 rounded-2xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-300 text-foreground placeholder-foreground/50 font-mono text-lg"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-pink-500/5 rounded-2xl pointer-events-none"></div>
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-foreground/60 font-bold">
+                    ETH
+                  </div>
+                </div>
+                {sellPrice && parseFloat(sellPrice) > 0 && (
+                  <p className="text-xs text-foreground/60 mt-2">
+                    ≈ ${(parseFloat(sellPrice) * 2000).toFixed(2)} USD (tahmini)
+                  </p>
                 )}
-              </button>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-4">
+                <button
+                  onClick={() => {
+                    setShowSellModal(false);
+                    setSelectedNFT(null);
+                    setSellPrice('');
+                  }}
+                  disabled={processing}
+                  className="group flex-1 px-6 py-4 bg-white/20 dark:bg-gray-800/40 backdrop-blur-sm border border-white/30 dark:border-gray-600/30 rounded-2xl font-bold text-foreground hover:bg-white/30 dark:hover:bg-gray-700/50 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <span className="text-lg group-hover:scale-125 transition-transform duration-300">❌</span>
+                    <span>İptal</span>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={confirmSell}
+                  disabled={processing || !sellPrice || parseFloat(sellPrice) <= 0}
+                  className="group flex-1 px-6 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl font-bold transition-all duration-300 hover:scale-105 hover:shadow-2xl disabled:opacity-50 disabled:hover:scale-100 border border-white/30 backdrop-blur-sm"
+                >
+                  {processing ? (
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"></div>
+                      <span>İşleniyor...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center space-x-2">
+                      <span className="text-lg group-hover:scale-125 transition-transform duration-300">🛍️</span>
+                      <span>Satışa Çıkar</span>
+                    </div>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

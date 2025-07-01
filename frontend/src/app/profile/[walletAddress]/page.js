@@ -307,33 +307,62 @@ export default function ProfilePage() {
   const nftsTitle = isOwnProfile ? "Bahçemdeki Varlıklar" : `${displayUsernameText}'in Varlıkları`;
 
   return (
-    <div className="container mx-auto px-4 py-8 min-h-screen">
-      <div className={classNames("relative h-48 md:h-64 rounded-t-2xl", 
-        !backgroundImagePreview ? 'bg-secondary-accent/80' : '' 
-      )}>
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Ultra-Modern Animated Background */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-10 left-10 w-72 h-72 bg-gradient-to-br from-primary-accent/20 to-blue-500/20 rounded-full filter blur-3xl animate-blob"></div>
+        <div className="absolute top-20 right-20 w-96 h-96 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full filter blur-3xl animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-20 left-20 w-80 h-80 bg-gradient-to-br from-green-500/20 to-teal-500/20 rounded-full filter blur-3xl animate-blob animation-delay-4000"></div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8 relative z-10">
+        {/* Ultra-Modern Hero Background */}
+        <div className={classNames(
+          "relative h-64 md:h-80 rounded-3xl overflow-hidden border border-white/20 dark:border-gray-700/30",
+          !backgroundImagePreview ? 'bg-gradient-to-br from-primary-accent/30 via-blue-500/20 to-purple-500/30' : ''
+        )}>
+          {/* Animated Background Elements */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-4 right-8 w-32 h-32 bg-white/10 rounded-full filter blur-2xl animate-blob"></div>
+            <div className="absolute bottom-6 left-6 w-24 h-24 bg-primary-accent/20 rounded-full filter blur-xl animate-blob animation-delay-2000"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-purple-500/10 rounded-full filter blur-3xl animate-blob animation-delay-4000"></div>
+          </div>
+
         {backgroundImagePreview && (
           <Image
             src={backgroundImagePreview}
             alt="Profil Arkaplanı"
             layout="fill"
             objectFit="cover"
-            className="rounded-t-2xl"
+              className="rounded-3xl"
           />
         )}
+
+          {/* Modern gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/30 rounded-3xl"></div>
+
         {isOwnProfile && editMode && (
-          <div className="absolute bottom-3 right-3 z-10">
+            <div className="absolute bottom-4 right-4 z-10">
             <label htmlFor="backgroundImageInput" 
-                className="bg-primary-accent/90 backdrop-blur-sm text-background px-3 py-1.5 rounded-md text-xs cursor-pointer hover:bg-primary-accent transition-all shadow-md">
-              Arkaplanı Değiştir
+                  className="bg-white/20 backdrop-blur-xl border border-white/30 text-white px-4 py-2 rounded-2xl text-sm cursor-pointer hover:bg-white/30 transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center space-x-2">
+                <span className="text-lg">🖼️</span>
+                <span>Arkaplanı Değiştir</span>
             </label>
             <input id="backgroundImageInput" type="file" accept="image/*" className="hidden" onChange={(e) => handleImageChange(e, 'background')} />
           </div>
         )}
       </div>
 
-      <div className="bg-gradient-to-t from-secondary-accent via-secondary-accent to-secondary-accent/85 shadow-xl rounded-b-2xl p-6 md:p-8 relative -mt-16 md:-mt-24 mx-auto max-w-4xl backdrop-blur-sm">
+      {/* Ultra-Modern Glassmorphism Profile Card */}
+      <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 shadow-2xl rounded-3xl p-8 md:p-12 -mt-20 md:-mt-32 mx-auto max-w-5xl overflow-hidden">
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-4 right-8 w-32 h-32 bg-primary-accent/10 rounded-full filter blur-2xl animate-blob"></div>
+          <div className="absolute bottom-6 left-6 w-24 h-24 bg-blue-500/10 rounded-full filter blur-xl animate-blob animation-delay-2000"></div>
+          <div className="absolute top-1/2 right-1/4 w-20 h-20 bg-purple-500/10 rounded-full filter blur-lg animate-blob animation-delay-4000"></div>
+        </div>
         <div className="flex flex-col md:flex-row items-center md:items-start md:space-x-6">
-          <div className={classNames("relative h-32 w-32 md:h-40 md:w-40 rounded-full border-4 shadow-lg -mt-16 md:-mt-20 overflow-hidden flex-shrink-0",
+          <div className={classNames("relative h-32 w-32 md:h-40 md:w-40 rounded-full border-4 shadow-lg -mt-8 md:-mt-12 overflow-hidden flex-shrink-0",
              profileImagePreview ? 'border-secondary-accent' : 'border-primary-accent/30 bg-background/80',
              isOwnProfile && editMode ? 'cursor-pointer' : ''
           )} onClick={() => isOwnProfile && editMode && document.getElementById('profileImageInput').click()}>
@@ -392,11 +421,11 @@ export default function ProfilePage() {
             {isOwnProfile && !editMode && (
               <div className="w-full md:w-auto space-y-2">
                 {/* Main Edit Button */}
-                <button onClick={() => setEditMode(true)} 
+              <button onClick={() => setEditMode(true)} 
                   className="bg-gradient-to-r from-primary-accent to-primary-accent/80 hover:from-primary-accent/90 hover:to-primary-accent/70 text-background font-medium py-2 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 w-full md:w-auto flex items-center justify-center group">
                   <span className="mr-2 group-hover:scale-110 transition-transform">✏️</span>
-                  Profili Düzenle
-                </button>
+                Profili Düzenle
+              </button>
                 
                 {/* Share Profile Button */}
                 <button 
@@ -412,7 +441,7 @@ export default function ProfilePage() {
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                   ) : (
                     <span className="mr-2 group-hover:scale-110 transition-transform">
-                      {isProfileShared ? '🌐' : '👥'}
+                      {isProfileShared ? '🌐' : '🧑‍🌾'}
                     </span>
                   )}
                   <span className="text-sm">
@@ -474,18 +503,63 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Kullanıcının NFT'leri (veya listeledikleri) */}
-      <div className="mt-12">
-        <h2 className="text-2xl font-semibold text-foreground mb-6">{nftsTitle} ({userNFTs.length})</h2>
+      {/* Ultra-Modern NFT Collection Section */}
+      <div className="mt-16">
+        {/* Modern Section Header */}
+        <div className="relative mb-8">
+          {/* Animated Background Elements */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-2 left-8 w-24 h-24 bg-primary-accent/10 rounded-full filter blur-xl animate-blob"></div>
+            <div className="absolute top-0 right-12 w-20 h-20 bg-blue-500/10 rounded-full filter blur-lg animate-blob animation-delay-2000"></div>
+          </div>
+          
+          <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 rounded-3xl p-6 md:p-8 overflow-hidden">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-primary-accent/20 to-blue-500/20 rounded-2xl flex items-center justify-center border border-white/20">
+                  <span className="text-3xl">🎨</span>
+                </div>
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-black">
+                    <span className="bg-gradient-to-r from-primary-accent via-blue-500 to-purple-500 bg-clip-text text-transparent">
+                      {nftsTitle}
+                    </span>
+                  </h2>
+                  <p className="text-foreground/60 mt-1">
+                    <span className="font-mono text-primary-accent">{userNFTs.length}</span> varlık sergileniyor
+                  </p>
+                </div>
+              </div>
+              
+              {/* Collection Stats */}
+              <div className="hidden md:flex space-x-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary-accent">{userNFTs.length}</div>
+                  <div className="text-xs text-foreground/60">Toplam</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-500">
+                    {userNFTs.filter(nft => nft.name?.includes('🌸') || nft.name?.includes('🍎')).length}
+                  </div>
+                  <div className="text-xs text-foreground/60">Gelişmiş</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         {loadingNFTs ? (
-             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {[...Array(4)].map((_, index) => (
-                    <div key={index} className="bg-secondary-accent rounded-xl shadow-lg overflow-hidden animate-pulse">
-                    <div className="aspect-square bg-background opacity-60 dark:opacity-40"></div>
-                    <div className="p-5">
-                        <div className="h-5 bg-background opacity-60 dark:opacity-40 rounded mb-3 w-3/4"></div>
-                        <div className="h-4 bg-background opacity-60 dark:opacity-40 rounded mb-4 w-1/2"></div>
-                        <div className="h-9 bg-background opacity-60 dark:opacity-40 rounded w-full"></div>
+             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4">
+                {[...Array(8)].map((_, index) => (
+                    <div key={index} className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 rounded-2xl shadow-lg overflow-hidden">
+                      <div className="absolute inset-0 pointer-events-none">
+                        <div className="absolute top-2 right-2 w-8 h-8 bg-primary-accent/10 rounded-full filter blur-lg animate-blob"></div>
+                      </div>
+                      
+                      <div className="aspect-square bg-gradient-to-br from-primary-accent/20 to-blue-500/20 animate-pulse"></div>
+                      <div className="p-4">
+                          <div className="h-4 bg-gradient-to-r from-primary-accent/30 to-blue-500/30 rounded-xl mb-2 animate-pulse"></div>
+                          <div className="h-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg mb-3 w-2/3 animate-pulse"></div>
+                          <div className="h-8 bg-gradient-to-r from-green-500/20 to-teal-500/20 rounded-xl animate-pulse"></div>
                     </div>
                     </div>
                 ))}
@@ -504,46 +578,100 @@ export default function ProfilePage() {
             ))}
           </div>
         ) : (
-            <div className="text-center py-10 bg-secondary-accent rounded-xl shadow-inner px-6">
-                <div className="text-5xl mb-3">🖼️</div>
-                <p className="text-lg text-foreground/80 dark:text-foreground/70">
-                    {isOwnProfile ? "Henüz sergilenecek bir NFT'niz yok." : "Bu bahçıvanın henüz sergilenecek bir NFT'si yok."}
-                </p>
+            <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 rounded-3xl p-12 md:p-16 text-center overflow-hidden">
+                {/* Animated Background Elements */}
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute top-8 left-8 w-32 h-32 bg-primary-accent/10 rounded-full filter blur-2xl animate-blob"></div>
+                  <div className="absolute bottom-8 right-8 w-24 h-24 bg-blue-500/10 rounded-full filter blur-xl animate-blob animation-delay-2000"></div>
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-purple-500/10 rounded-full filter blur-3xl animate-blob animation-delay-4000"></div>
+                </div>
+                
+                <div className="relative z-10">
+                  <div className="w-24 h-24 bg-gradient-to-br from-primary-accent/20 to-blue-500/20 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-white/20">
+                    <span className="text-5xl">🎨</span>
+                  </div>
+                  
+                  <h3 className="text-2xl font-bold text-foreground mb-4">
+                    {isOwnProfile ? "Koleksiyonunuz Boş" : "Koleksiyon Boş"}
+                  </h3>
+                  
+                  <p className="text-lg text-foreground/70 mb-8 max-w-md mx-auto">
+                      {isOwnProfile ? "Henüz sergilenecek bir NFT'niz yok. İlk varlığınızı oluşturun ve koleksiyonunuzu büyütmeye başlayın!" : "Bu bahçıvanın henüz sergilenecek bir NFT'si yok."}
+                  </p>
+                  
                 {isOwnProfile && (
-                    <Link href="/mint" className="mt-4 inline-block bg-primary-accent hover:brightness-95 text-background px-5 py-2.5 rounded-lg font-medium transition-colors shadow hover:shadow-md">
-                        İlk Varlığını Mint Et
+                      <Link href="/mint" className="inline-flex items-center space-x-2 bg-gradient-to-r from-primary-accent to-primary-accent/80 hover:from-primary-accent/90 hover:to-primary-accent/70 text-background font-semibold px-8 py-4 rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105">
+                        <span className="text-xl">🌱</span>
+                        <span>İlk Varlığını Mint Et</span>
                     </Link>
                 )}
+                </div>
             </div>
         )}
       </div>
 
-      {/* 3D İzometrik Bahçe */}
-      <div className="mt-16">
-        <div className="flex items-center justify-between mb-6">
+      {/* Ultra-Modern 3D Garden Section */}
+      <div className="mt-20">
+        {/* Modern 3D Section Header */}
+        <div className="relative mb-8">
+          {/* Animated Background Elements */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-2 left-8 w-28 h-28 bg-green-500/10 rounded-full filter blur-xl animate-blob"></div>
+            <div className="absolute top-0 right-12 w-24 h-24 bg-teal-500/10 rounded-full filter blur-lg animate-blob animation-delay-2000"></div>
+          </div>
+          
+          <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 rounded-3xl p-6 md:p-8 overflow-hidden">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-500/20 to-teal-500/20 rounded-2xl flex items-center justify-center border border-white/20">
+                  <span className="text-3xl">🎮</span>
+                </div>
           <div>
-            <h2 className="text-2xl font-semibold text-foreground">
-              🎮 {isOwnProfile ? 'Senin 3D Bahçen' : `${displayUsernameText}'in 3D Bahçesi`}
+                  <h2 className="text-2xl md:text-3xl font-black">
+                    <span className="bg-gradient-to-r from-green-500 via-teal-500 to-blue-500 bg-clip-text text-transparent">
+                      {isOwnProfile ? 'Senin 3D Bahçen' : `${displayUsernameText}'in 3D Bahçesi`}
+                    </span>
             </h2>
-            <p className="text-text-muted mt-1">
+                  <p className="text-foreground/60 mt-1">
               İzometrik görünümde bahçenizi keşfedin ve NFT'lerinizle etkileşim kurun
             </p>
+                </div>
           </div>
           
           {/* 3D Controls Info */}
-          <div className="bg-secondary-accent rounded-lg p-3 text-xs hidden md:block">
-            <div className="text-foreground font-medium mb-1">🎮 Kontroller:</div>
-            <div className="text-text-muted space-y-0.5">
-              <div>• Mouse: Döndür</div>
-              <div>• Scroll: Zoom</div>
-              <div>• Sağ tık: Kaydır</div>
+              <div className="hidden md:block bg-white/10 dark:bg-gray-900/20 backdrop-blur-sm border border-white/20 rounded-2xl p-4">
+                <div className="text-foreground font-medium mb-2 flex items-center space-x-2">
+                  <span className="text-lg">🎮</span>
+                  <span>Kontroller</span>
+                </div>
+                <div className="text-foreground/60 space-y-1 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-primary-accent">🖱️</span>
+                    <span>Mouse: Döndür</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-blue-500">⚪</span>
+                    <span>Scroll: Zoom</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-green-500">👆</span>
+                    <span>Sağ tık: Kaydır</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* 3D Canvas Container */}
-        <div className="bg-card-bg rounded-2xl shadow-lg overflow-hidden border border-border-color">
-          <div className="h-[500px] md:h-[600px]">
+        {/* Ultra-Modern 3D Canvas Container */}
+        <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 rounded-3xl shadow-2xl overflow-hidden">
+          {/* Animated Frame Elements */}
+          <div className="absolute inset-0 pointer-events-none z-10">
+            <div className="absolute top-4 left-4 w-16 h-16 bg-green-500/10 rounded-full filter blur-xl animate-blob"></div>
+            <div className="absolute bottom-4 right-4 w-12 h-12 bg-teal-500/10 rounded-full filter blur-lg animate-blob animation-delay-2000"></div>
+          </div>
+          
+          <div className="h-[500px] md:h-[600px] relative">
             <Canvas
               camera={{
                 position: [8, 8, 8],
@@ -615,36 +743,71 @@ export default function ProfilePage() {
             </Canvas>
           </div>
           
-          {/* Bottom Info Bar */}
-          <div className="bg-primary-accent/10 border-t border-border-color px-4 py-3">
-            <div className="flex items-center justify-between text-sm">
-              <div className="text-text-muted">
-                💡 3D Bahçe ile NFT'lerinizle etkileşimli deneyim yaşayın
+          {/* Ultra-Modern Bottom Info Bar */}
+          <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl border-t border-white/20 dark:border-gray-700/30 px-6 py-4">
+            {/* Animated Background */}
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute bottom-2 left-8 w-20 h-20 bg-green-500/10 rounded-full filter blur-xl animate-blob"></div>
+            </div>
+            
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center space-x-3 text-foreground/70">
+                <span className="text-2xl">💡</span>
+                <span className="text-sm font-medium">3D Bahçe ile NFT'lerinizle etkileşimli deneyim yaşayın</span>
               </div>
               
-              <div className="flex space-x-2">
-                <button className="btn-primary text-xs px-2 py-1 opacity-80 hover:opacity-100">
-                  🏠 Tam Ekran
+              <div className="flex space-x-3">
+                <button className="bg-gradient-to-r from-green-500/20 to-teal-500/20 hover:from-green-500/30 hover:to-teal-500/30 backdrop-blur-sm border border-white/20 text-foreground text-xs px-4 py-2 rounded-xl transition-all hover:scale-105 flex items-center space-x-2">
+                  <span>🏠</span>
+                  <span>Tam Ekran</span>
                 </button>
                 <Link 
                   href={`/garden/${profileWalletAddress}`}
-                  className="btn-secondary text-xs px-2 py-1 opacity-80 hover:opacity-100"
+                  className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 hover:from-blue-500/30 hover:to-purple-500/30 backdrop-blur-sm border border-white/20 text-foreground text-xs px-4 py-2 rounded-xl transition-all hover:scale-105 flex items-center space-x-2"
                 >
-                  📋 2D Görünüm
+                  <span>📋</span>
+                  <span>2D Görünüm</span>
                 </Link>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Mobile Controls Info */}
-        <div className="mt-4 bg-secondary-accent rounded-lg p-3 text-sm md:hidden">
-          <div className="text-foreground font-medium mb-2">📱 Mobil Kontroller:</div>
-          <div className="text-text-muted grid grid-cols-2 gap-2">
-            <div>• Tek parmak: Döndür</div>
-            <div>• İki parmak: Zoom</div>
-            <div>• Pinch: Yakınlaştır</div>
-            <div>• Bitkilere dokunun</div>
+        {/* Ultra-Modern Mobile Controls Info */}
+        <div className="mt-6 relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 rounded-3xl p-6 md:hidden overflow-hidden">
+          {/* Animated Background */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-2 right-4 w-16 h-16 bg-primary-accent/10 rounded-full filter blur-xl animate-blob"></div>
+            <div className="absolute bottom-2 left-4 w-12 h-12 bg-blue-500/10 rounded-full filter blur-lg animate-blob animation-delay-2000"></div>
+          </div>
+          
+          <div className="relative">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-primary-accent/20 to-blue-500/20 rounded-xl flex items-center justify-center border border-white/20">
+                <span className="text-lg">📱</span>
+              </div>
+              <h3 className="text-foreground font-bold text-lg">Mobil Kontroller</h3>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-white/10 dark:bg-gray-900/20 backdrop-blur-sm border border-white/20 rounded-2xl p-3 flex items-center space-x-2">
+                <span className="text-primary-accent text-lg">👆</span>
+                <span className="text-foreground/70 text-sm">Tek parmak: Döndür</span>
+              </div>
+              <div className="bg-white/10 dark:bg-gray-900/20 backdrop-blur-sm border border-white/20 rounded-2xl p-3 flex items-center space-x-2">
+                <span className="text-blue-500 text-lg">✌️</span>
+                <span className="text-foreground/70 text-sm">İki parmak: Zoom</span>
+              </div>
+              <div className="bg-white/10 dark:bg-gray-900/20 backdrop-blur-sm border border-white/20 rounded-2xl p-3 flex items-center space-x-2">
+                <span className="text-green-500 text-lg">🤏</span>
+                <span className="text-foreground/70 text-sm">Pinch: Yakınlaştır</span>
+              </div>
+              <div className="bg-white/10 dark:bg-gray-900/20 backdrop-blur-sm border border-white/20 rounded-2xl p-3 flex items-center space-x-2">
+                <span className="text-purple-500 text-lg">🌱</span>
+                <span className="text-foreground/70 text-sm">Bitkilere dokunun</span>
+              </div>
+            </div>
+          </div>
           </div>
         </div>
       </div>

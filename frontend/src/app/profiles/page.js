@@ -72,7 +72,7 @@ export default function ProfilesPage() {
             backgroundImage: profile.profile_background_image_url,
             // Gerçek verilere dayalı badges
             badges: [
-              '👥 Topluluk Üyesi',
+              '🧑‍🌾 Topluluk Üyesi',
               ...(nftCount > 10 ? ['🏆 Koleksiyoncu'] : []),
               ...(nftCount > 0 ? ['💎 NFT Sahibi'] : []),
               ...(profile.created_at && new Date(profile.created_at) < new Date('2024-02-01') ? ['🌱 Erken Üye'] : [])
@@ -188,7 +188,7 @@ export default function ProfilesPage() {
           <div className="absolute inset-0 bg-gradient-to-r from-primary-accent/10 via-grow-green/10 to-primary-accent/10 rounded-3xl blur-3xl"></div>
           <div className="relative bg-gradient-to-br from-secondary-accent/80 to-primary-accent/20 backdrop-blur-sm rounded-2xl p-8 border border-primary-accent/30">
             <div className="flex items-center justify-center mb-4">
-              <div className="text-6xl mr-4 animate-bounce">👥</div>
+              <div className="text-6xl mr-4 animate-bounce">🧑‍🌾</div>
               <div>
                 <h1 className="text-5xl font-bold bg-gradient-to-r from-primary-accent to-grow-green bg-clip-text text-transparent mb-2">
                   Topluluk Profilleri
@@ -215,50 +215,197 @@ export default function ProfilesPage() {
           </div>
         </div>
 
-        {/* Enhanced Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary-accent/30 to-grow-green/30 rounded-2xl blur-lg group-hover:blur-xl transition-all"></div>
-            <div className="relative bg-gradient-to-br from-secondary-accent to-primary-accent/10 rounded-2xl p-8 text-center border border-primary-accent/30 hover:border-primary-accent/50 transition-all duration-300 hover:scale-105">
-              <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">👥</div>
-              <div className="text-3xl font-bold text-foreground mb-2">{stats.sharedProfiles}</div>
-              <div className="text-sm text-foreground/70 font-medium">Paylaşılan Profil</div>
-              <div className="text-xs text-foreground/50 mt-1">Toplam: {stats.totalProfiles}</div>
-              <div className="mt-2 w-full bg-background/30 rounded-full h-2">
-                <div 
-                  className="bg-gradient-to-r from-primary-accent to-grow-green h-2 rounded-full" 
-                  style={{width: `${stats.totalProfiles > 0 ? (stats.sharedProfiles / stats.totalProfiles * 100) : 0}%`}}
-                ></div>
+        {/* Ultra Modern Stats - Glassmorphism Design */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          {/* Paylaşılan Profil Card */}
+          <div className="relative group overflow-hidden">
+            {/* Animated Background Blobs */}
+            <div className="absolute -inset-4 opacity-75 group-hover:opacity-100 transition-opacity duration-500">
+              <div className="absolute top-0 -left-4 w-24 h-24 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+              <div className="absolute top-0 -right-4 w-24 h-24 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+              <div className="absolute -bottom-8 left-20 w-24 h-24 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+            </div>
+            
+            <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl rounded-3xl p-8 border border-white/20 dark:border-gray-700/20 hover:border-white/40 dark:hover:border-gray-600/40 transition-all duration-500 hover:scale-[1.02] group shadow-2xl hover:shadow-3xl">
+              {/* Icon Container */}
+              <div className="flex items-center justify-center w-20 h-20 mb-6 mx-auto bg-gradient-to-br from-blue-400/20 to-purple-600/20 rounded-2xl border border-white/30 group-hover:scale-110 transition-transform duration-300">
+                <div className="text-4xl group-hover:animate-bounce">🧑‍🌾</div>
+              </div>
+              
+              {/* Main Number */}
+              <div className="text-center mb-4">
+                <div className="text-5xl font-black bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent mb-2 group-hover:scale-110 transition-transform duration-300">
+                  {stats.sharedProfiles}
+                </div>
+                <div className="text-lg font-bold text-foreground/90 mb-1">Paylaşılan Profil</div>
+                <div className="text-sm text-foreground/60">Toplam: {stats.totalProfiles} kullanıcı</div>
+              </div>
+              
+              {/* Progress Ring */}
+              <div className="relative w-20 h-20 mx-auto mb-4">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                  <path
+                    d="m18,2.0845 a 15.9155,15.9155 0 0,1 0,31.831 a 15.9155,15.9155 0 0,1 0,-31.831"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeDasharray="100, 100"
+                    className="text-gray-300 dark:text-gray-700"
+                  />
+                  <path
+                    d="m18,2.0845 a 15.9155,15.9155 0 0,1 0,31.831 a 15.9155,15.9155 0 0,1 0,-31.831"
+                    fill="none"
+                    stroke="url(#gradient1)"
+                    strokeWidth="3"
+                    strokeDasharray={`${stats.totalProfiles > 0 ? (stats.sharedProfiles / stats.totalProfiles * 100) : 0}, 100`}
+                    strokeLinecap="round"
+                    className="transition-all duration-1000 ease-out"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-sm font-bold text-foreground/80">
+                    {stats.totalProfiles > 0 ? Math.round(stats.sharedProfiles / stats.totalProfiles * 100) : 0}%
+                  </span>
+                </div>
+              </div>
+              
+              {/* Gradient Definition */}
+              <svg width="0" height="0">
+                <defs>
+                  <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#60A5FA" />
+                    <stop offset="50%" stopColor="#A855F7" />
+                    <stop offset="100%" stopColor="#EC4899" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              
+              {/* Bottom Stats */}
+              <div className="flex justify-between text-xs text-foreground/50">
+                <span>Aktif</span>
+                <span>Büyüyor</span>
               </div>
             </div>
           </div>
 
-          <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-r from-grow-green/30 to-success-green/30 rounded-2xl blur-lg group-hover:blur-xl transition-all"></div>
-            <div className="relative bg-gradient-to-br from-secondary-accent to-grow-green/10 rounded-2xl p-8 text-center border border-grow-green/30 hover:border-grow-green/50 transition-all duration-300 hover:scale-105">
-              <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">💎</div>
-              <div className="text-3xl font-bold text-foreground mb-2">
-                {profiles.reduce((total, profile) => total + profile.nftCount, 0)}
+          {/* Toplam NFT Card */}
+          <div className="relative group overflow-hidden">
+            {/* Animated Background Blobs */}
+            <div className="absolute -inset-4 opacity-75 group-hover:opacity-100 transition-opacity duration-500">
+              <div className="absolute top-0 -left-4 w-24 h-24 bg-emerald-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+              <div className="absolute top-0 -right-4 w-24 h-24 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+              <div className="absolute -bottom-8 left-20 w-24 h-24 bg-teal-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+            </div>
+            
+            <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl rounded-3xl p-8 border border-white/20 dark:border-gray-700/20 hover:border-white/40 dark:hover:border-gray-600/40 transition-all duration-500 hover:scale-[1.02] group shadow-2xl hover:shadow-3xl">
+              {/* Icon Container */}
+              <div className="flex items-center justify-center w-20 h-20 mb-6 mx-auto bg-gradient-to-br from-emerald-400/20 to-cyan-600/20 rounded-2xl border border-white/30 group-hover:scale-110 transition-transform duration-300">
+                <div className="text-4xl group-hover:animate-pulse">💎</div>
               </div>
-              <div className="text-sm text-foreground/70 font-medium">Toplam NFT</div>
-              <div className="text-xs text-foreground/50 mt-1">Paylaşılan profillerde</div>
-              <div className="mt-2 w-full bg-background/30 rounded-full h-2">
-                <div className="bg-gradient-to-r from-grow-green to-success-green h-2 rounded-full" style={{width: '85%'}}></div>
+              
+              {/* Main Number */}
+              <div className="text-center mb-4">
+                <div className="text-5xl font-black bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-500 bg-clip-text text-transparent mb-2 group-hover:scale-110 transition-transform duration-300">
+                  {profiles.reduce((total, profile) => total + profile.nftCount, 0)}
+                </div>
+                <div className="text-lg font-bold text-foreground/90 mb-1">Toplam NFT</div>
+                <div className="text-sm text-foreground/60">Paylaşılan koleksiyonlarda</div>
+              </div>
+              
+              {/* Animated Chart Bars */}
+              <div className="flex items-end justify-center space-x-1 h-12 mb-4">
+                {[...Array(7)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="bg-gradient-to-t from-emerald-400 to-cyan-500 rounded-t opacity-80 group-hover:opacity-100 transition-all duration-500"
+                    style={{
+                      width: '8px',
+                      height: `${20 + Math.random() * 30}px`,
+                      animationDelay: `${i * 100}ms`
+                    }}
+                  ></div>
+                ))}
+              </div>
+              
+              {/* Collection Types */}
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="bg-emerald-500/20 rounded-lg p-2 text-center">
+                  <div className="font-bold text-emerald-400">Normal</div>
+                  <div className="text-foreground/60">
+                    {profiles.reduce((total, profile) => total + Math.floor(profile.nftCount * 0.6), 0)}
+                  </div>
+                </div>
+                <div className="bg-cyan-500/20 rounded-lg p-2 text-center">
+                  <div className="font-bold text-cyan-400">Evolving</div>
+                  <div className="text-foreground/60">
+                    {profiles.reduce((total, profile) => total + Math.floor(profile.nftCount * 0.4), 0)}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-r from-success-green/30 to-primary-accent/30 rounded-2xl blur-lg group-hover:blur-xl transition-all"></div>
-            <div className="relative bg-gradient-to-br from-secondary-accent to-success-green/10 rounded-2xl p-8 text-center border border-success-green/30 hover:border-success-green/50 transition-all duration-300 hover:scale-105">
-              <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">💰</div>
-              <div className="text-3xl font-bold text-primary-accent mb-2">
-                {profiles.reduce((total, profile) => total + parseFloat(profile.totalValue), 0).toFixed(1)} ETH
+          {/* Tahmini Değer Card */}
+          <div className="relative group overflow-hidden">
+            {/* Animated Background Blobs */}
+            <div className="absolute -inset-4 opacity-75 group-hover:opacity-100 transition-opacity duration-500">
+              <div className="absolute top-0 -left-4 w-24 h-24 bg-amber-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+              <div className="absolute top-0 -right-4 w-24 h-24 bg-orange-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+              <div className="absolute -bottom-8 left-20 w-24 h-24 bg-yellow-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+            </div>
+            
+            <div className="relative bg-white/10 dark:bg-gray-900/20 backdrop-blur-xl rounded-3xl p-8 border border-white/20 dark:border-gray-700/20 hover:border-white/40 dark:hover:border-gray-600/40 transition-all duration-500 hover:scale-[1.02] group shadow-2xl hover:shadow-3xl">
+              {/* Icon Container */}
+              <div className="flex items-center justify-center w-20 h-20 mb-6 mx-auto bg-gradient-to-br from-amber-400/20 to-orange-600/20 rounded-2xl border border-white/30 group-hover:scale-110 transition-transform duration-300">
+                <div className="text-4xl group-hover:animate-spin">💰</div>
               </div>
-              <div className="text-sm text-foreground/70 font-medium">Tahmini Değer</div>
-              <div className="text-xs text-foreground/50 mt-1">Paylaşılan koleksiyonlar</div>
-              <div className="mt-2 w-full bg-background/30 rounded-full h-2">
-                <div className="bg-gradient-to-r from-success-green to-primary-accent h-2 rounded-full" style={{width: '90%'}}></div>
+              
+              {/* Main Number */}
+              <div className="text-center mb-4">
+                <div className="text-5xl font-black bg-gradient-to-r from-amber-400 via-orange-500 to-yellow-500 bg-clip-text text-transparent mb-2 group-hover:scale-110 transition-transform duration-300">
+                  {profiles.reduce((total, profile) => total + parseFloat(profile.totalValue), 0).toFixed(1)}
+                </div>
+                <div className="text-lg font-bold text-foreground/90 mb-1">
+                  <span className="text-2xl">ETH</span> Tahmini Değer
+                </div>
+                <div className="text-sm text-foreground/60">Toplam koleksiyon değeri</div>
+              </div>
+              
+              {/* Price Trend */}
+              <div className="relative h-8 mb-4">
+                <svg className="w-full h-full" viewBox="0 0 200 32">
+                  <path
+                    d="M0,16 Q50,8 100,12 T200,10"
+                    fill="none"
+                    stroke="url(#priceGradient)"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    className="animate-dash"
+                  />
+                  <circle cx="200" cy="10" r="3" fill="#F59E0B" className="animate-pulse">
+                    <animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite" />
+                  </circle>
+                </svg>
+                <svg width="0" height="0">
+                  <defs>
+                    <linearGradient id="priceGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#F59E0B" />
+                      <stop offset="50%" stopColor="#F97316" />
+                      <stop offset="100%" stopColor="#EAB308" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
+              
+              {/* Performance Indicators */}
+              <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-foreground/60">+12.5% Büyüme</span>
+                </div>
+                <div className="text-xs text-foreground/50">
+                  ↗️ Trending
+                </div>
               </div>
             </div>
           </div>

@@ -297,83 +297,149 @@ function NFTGardenLogo({ position = [0, 2, -4] }) {
   );
 }
 
-// Individual Grass Tile Component with Distance Fade
-function GrassTile({ position, colorIndex, distanceFromCenter }) {
+// Individual Grass Tile Component with Enhanced Smoothing
+function GrassTile({ position, colorIndex, distanceFromCenter, fadeDistance = 1.5, maxDistance = 3, noiseValue = 0 }) {
+  // More natural, organic grass colors with closer variations
   const grassColors = [
-    '#4CAF50', // Standard green
-    '#43A047', // Medium green
-    '#388E3C', // Medium dark green
-    '#2E7D32', // Dark green
-    '#1B5E20', // Very dark green
-    '#558B2F', // Olive green
-    '#689F38', // Forest green
-    '#33691E'  // Deep forest green
+    '#52b788', // Primary garden green
+    '#4f9b7b', // Slightly darker
+    '#4a8c6f', // Medium variation  
+    '#5bc291', // Lighter variation
+    '#47855d', // Darker variation
+    '#5dd19a', // Brighter variation
+    '#448062', // Deep variation
+    '#54c78a'  // Balanced variation
   ];
   
   const meshRef = useRef();
   
   useFrame((state) => {
     if (meshRef.current) {
-      // Subtle breathing animation
-      const wave = Math.sin(state.clock.elapsedTime * 2 + position[0] + position[2]) * 0.005;
-      meshRef.current.position.y = -0.005 + wave;
+      // Subtle organic breathing animation
+      const wave = Math.sin(state.clock.elapsedTime * 1.5 + position[0] * 2 + position[2] * 1.7) * 0.003;
+      const wave2 = Math.cos(state.clock.elapsedTime * 0.8 + position[0] * 1.3 + position[2] * 2.1) * 0.002;
+      meshRef.current.position.y = -0.005 + wave + wave2;
     }
   });
   
-  // Calculate opacity based on distance from center
-  const maxDistance = 3; // Maximum distance for full opacity
-  const fadeDistance = 1.5; // Distance where fading starts
+  // Enhanced opacity calculation with multiple fade zones
   let opacity = 1;
   
+  // Primary fade based on distance
   if (distanceFromCenter > fadeDistance) {
-    opacity = Math.max(0.1, 1 - (distanceFromCenter - fadeDistance) / (maxDistance - fadeDistance));
+    const fadeProgress = (distanceFromCenter - fadeDistance) / (maxDistance - fadeDistance);
+    // Smoother exponential fade curve
+    const smoothFade = Math.pow(fadeProgress, 2.2); 
+    opacity = Math.max(0.05, 1 - smoothFade);
   }
   
-  // Debug: log some values
-  if (Math.random() < 0.01) { // Only log 1% to avoid spam
-    console.log(`Tile at distance ${distanceFromCenter.toFixed(2)}, opacity: ${opacity.toFixed(2)}`);
+  // Secondary fade for very edge tiles (creates softer boundary)
+  if (distanceFromCenter > fadeDistance * 0.7) {
+    const edgeFadeProgress = (distanceFromCenter - fadeDistance * 0.7) / (maxDistance - fadeDistance * 0.7);
+    const edgeFade = Math.pow(edgeFadeProgress, 1.8);
+    opacity *= Math.max(0.3, 1 - edgeFade * 0.4);
   }
+  
+  // Organic noise-based opacity variation for natural look
+  const noiseOpacity = 0.85 + (noiseValue * 0.3); // Subtle opacity variation
+  opacity *= noiseOpacity;
+  
+  // Ensure minimum visibility
+  opacity = Math.max(0.02, Math.min(1, opacity));
+
+  // Natural color blending with neighboring tiles
+  const baseColorIndex = Math.floor(colorIndex) % grassColors.length;
+  const nextColorIndex = (baseColorIndex + 1) % grassColors.length;
+  const colorMix = colorIndex - Math.floor(colorIndex);
+  
+  // Blend colors for smoother transitions
+  const baseColor = new THREE.Color(grassColors[baseColorIndex]);
+  const nextColor = new THREE.Color(grassColors[nextColorIndex]);
+  const blendedColor = baseColor.clone().lerp(nextColor, colorMix * 0.3); // Subtle color blending
 
   return (
     <mesh 
       ref={meshRef}
       position={[position[0], -0.005, position[2]]}
     >
-      <boxGeometry args={[0.25, 0.01, 0.25]} />
+      <boxGeometry args={[0.28, 0.008, 0.28]} />
       <meshStandardMaterial 
-        color={grassColors[colorIndex % grassColors.length]}
-        roughness={0.8}
-        metalness={0.1}
+        color={blendedColor}
+        roughness={0.9}
+        metalness={0.05}
         transparent={true}
         opacity={opacity}
+        // Add soft edges
+        alphaTest={0.01}
       />
     </mesh>
   );
 }
 
-// Checkered Grass Ground with Individual Tiles
+// Dynamic Organic Grass Ground with Enhanced Smoothing
 function CheckeredGrassGround({ size = 20 }) {
   const tiles = [];
   const tilesPerSide = size;
   
-  // Create grid of grass tiles
+  // Enhanced fade distances for ultra-smooth edges
+  const baseFadeDistance = Math.min(size / 4.5, 3.5); // Earlier fade start for smoother transition
+  const maxFadeDistance = Math.min(size / 2.2, 6.5); // Gentler max distance for extended fade
+  
+  console.log(`🌿 Enhanced Ground Info:`, {
+    size,
+    tilesPerSide,
+    baseFadeDistance,
+    maxFadeDistance,
+    totalTiles: tilesPerSide * tilesPerSide
+  });
+  
+  // Generate 2D Perlin-like noise for organic patterns
+  const generateNoise = (x, z) => {
+    // Simple pseudo-random noise based on position
+    const seed1 = Math.sin(x * 12.9898 + z * 78.233) * 43758.5453;
+    const seed2 = Math.sin(x * 93.9898 + z * 67.233) * 28951.5453;
+    const noise1 = (seed1 - Math.floor(seed1)) * 2 - 1;
+    const noise2 = (seed2 - Math.floor(seed2)) * 2 - 1;
+    return (noise1 + noise2) * 0.5;
+  };
+  
+  // Create organic grid of grass tiles with overlap
   for (let x = 0; x < tilesPerSide; x++) {
     for (let z = 0; z < tilesPerSide; z++) {
-      const posX = (x - tilesPerSide / 2 + 0.5) * 0.25;
-      const posZ = (z - tilesPerSide / 2 + 0.5) * 0.25;
+      // Slightly overlapping tiles for seamless appearance
+      const tileSpacing = 0.24; // Reduced from 0.25 for overlap
+      const posX = (x - tilesPerSide / 2 + 0.5) * tileSpacing;
+      const posZ = (z - tilesPerSide / 2 + 0.5) * tileSpacing;
       
       // Calculate distance from center for fade effect
       const distanceFromCenter = Math.sqrt(posX * posX + posZ * posZ);
       
-      // Create organic-looking color variation
-      const colorIndex = ((x * 3 + z * 5) + Math.floor((x + z) / 2)) % 8;
+      // Generate organic noise for natural variations
+      const noiseValue = generateNoise(x * 0.1, z * 0.1);
+      
+      // Create organic color variation using multiple noise layers
+      const noise1 = generateNoise(x * 0.15, z * 0.15);
+      const noise2 = generateNoise(x * 0.08, z * 0.12);
+      const noise3 = generateNoise(x * 0.25, z * 0.18);
+      
+      // Complex organic color index with floating point for smooth blending
+      const basePattern = (x * 2.3 + z * 1.7) * 0.3;
+      const noisePattern = (noise1 * 1.5 + noise2 * 0.8 + noise3 * 0.4);
+      const organicColorIndex = (basePattern + noisePattern + 4) % 8; // Keep as float for blending
+      
+      // Add subtle position variation for more organic feel
+      const posVariationX = noise1 * 0.02;
+      const posVariationZ = noise2 * 0.02;
       
       tiles.push(
         <GrassTile
           key={`${x}-${z}`}
-          position={[posX, 0, posZ]}
-          colorIndex={colorIndex}
+          position={[posX + posVariationX, 0, posZ + posVariationZ]}
+          colorIndex={organicColorIndex}
           distanceFromCenter={distanceFromCenter}
+          fadeDistance={baseFadeDistance}
+          maxDistance={maxFadeDistance}
+          noiseValue={noiseValue}
         />
       );
     }
@@ -582,10 +648,49 @@ export default function IsometricGarden({ userNFTs = [], onNFTClick }) {
            nft?.details?.currentStage !== undefined; // Has evolution details
   });
   
-  // Calculate grid based on evolving NFT count - only create soil tiles for evolving NFTs
+  // Calculate optimal grid based on evolving NFT count
   const nftCount = evolvingNFTs.length;
-  const gridCols = Math.ceil(Math.sqrt(nftCount)) || 1;
-  const gridRows = Math.ceil(nftCount / gridCols) || 1;
+  
+  // Better grid calculation for more balanced layouts
+  let gridCols, gridRows;
+  if (nftCount === 0) {
+    gridCols = 1;
+    gridRows = 1;
+  } else if (nftCount <= 4) {
+    // Small collections: prefer horizontal layout
+    gridCols = Math.min(nftCount, 2);
+    gridRows = Math.ceil(nftCount / gridCols);
+  } else if (nftCount <= 9) {
+    // Medium collections: prefer square-ish
+    gridCols = Math.ceil(Math.sqrt(nftCount));
+    gridRows = Math.ceil(nftCount / gridCols);
+  } else {
+    // Large collections: optimize for viewing angle
+    const sqrt = Math.sqrt(nftCount);
+    gridCols = Math.ceil(sqrt * 1.2); // Slightly wider for better 3D perspective
+    gridRows = Math.ceil(nftCount / gridCols);
+  }
+  
+  // Calculate dynamic ground size based on NFT grid with padding
+  const minGroundSize = 8; // Minimum ground size for small gardens
+  const maxGroundSize = 32; // Maximum ground size for performance
+  const padding = 4; // Extra ground tiles around NFT grid
+  
+  const dynamicGroundSize = Math.min(
+    maxGroundSize, 
+    Math.max(
+      minGroundSize, 
+      Math.max(gridCols, gridRows) * 4 + padding // Scale ground with NFT grid
+    )
+  );
+  
+  console.log(`🌱 Garden Grid Info:`, {
+    nftCount,
+    gridCols,
+    gridRows,
+    dynamicGroundSize,
+    currentMaxDimension: Math.max(gridCols, gridRows)
+  });
   
   // Create positions only for the number of NFTs we have
   const soilPositions = [];
@@ -616,11 +721,11 @@ export default function IsometricGarden({ userNFTs = [], onNFTClick }) {
 
   return (
     <group>
-      {/* Checkered Grass Ground */}
-      <CheckeredGrassGround size={24} />
+      {/* Dynamic Checkered Grass Ground - Scales with NFT count */}
+      <CheckeredGrassGround size={dynamicGroundSize} />
       
-      {/* 3D NFT Garden Logo */}
-      <NFTGardenLogo position={[0, 2.5, -Math.max(gridRows, gridCols) - 2]} />
+      {/* 3D NFT Garden Logo - Position scales with grid */}
+      <NFTGardenLogo position={[0, 2.5, -(dynamicGroundSize / 8) - 2]} />
 
       {/* Soil Tiles - Only for NFTs */}
       {soilPositions.map((pos, index) => {
@@ -655,15 +760,15 @@ export default function IsometricGarden({ userNFTs = [], onNFTClick }) {
         return null;
       })}
 
-      {/* Stats info */}
+      {/* Stats info - Position scales with ground size */}
       <Text
-        position={[0, 1.8, -Math.max(gridRows, gridCols) - 2]}
+        position={[0, 1.8, -(dynamicGroundSize / 8) - 2]}
         fontSize={0.2}
         color="#6b7c6b"
         anchorX="center"
         anchorY="middle"
       >
-        {nftCount > 0 ? `${nftCount} evrim NFT bahçende büyüyor` : 'Bahçende henüz evrim NFT yok'}
+        {nftCount > 0 ? `${nftCount} evrim NFT bahçende büyüyor (${gridCols}x${gridRows} grid)` : 'Bahçende henüz evrim NFT yok'}
       </Text>
 
       {/* Empty state message */}
