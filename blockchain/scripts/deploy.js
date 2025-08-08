@@ -1,4 +1,6 @@
 const { ethers } = require("hardhat");
+const fs = require("fs");
+const path = require("path");
 
 async function main() {
   const [deployer] = await ethers.getSigners(); // Deployer adresini almak için
@@ -30,12 +32,36 @@ async function main() {
   console.log("EvolvingNFT deployed to:", evolvingNFTAddress);
   console.log("--- EvolvingNFT Contract Deployed Successfully ---");
 
-  // İleride frontend'de kullanmak üzere bu adresleri ve ABI'ları bir yere kaydetmeniz gerekecek.
-  // Örneğin bir JSON dosyasına veya frontend config dosyasına.
-  console.log("\n--- Contract Addresses for Frontend ---");
-  console.log(`export const nftAddress = "${nftAddress}";`);
-  console.log(`export const marketplaceAddress = "${marketplaceAddress}";`);
-  console.log(`export const evolvingNFTAddress = "${evolvingNFTAddress}";`);
+  // Kontrat adreslerini JSON dosyasına kaydet
+  const contractAddresses = {
+    NFT_CONTRACT_ADDRESS: nftAddress,
+    MARKETPLACE_CONTRACT_ADDRESS: marketplaceAddress,
+    EVOLVING_NFT_CONTRACT_ADDRESS: evolvingNFTAddress,
+    ADMIN_WALLET_ADDRESS: deployer.address,
+    deployedAt: new Date().toISOString(),
+    network: "localhost"
+  };
+
+  // JSON dosyasını frontend utils klasörüne yaz
+  const addressesDir = path.join(__dirname, "../../frontend/src/utils");
+  const addressesFile = path.join(addressesDir, "contractAddresses.json");
+  
+  if (!fs.existsSync(addressesDir)) {
+    fs.mkdirSync(addressesDir, { recursive: true });
+  }
+  
+  fs.writeFileSync(addressesFile, JSON.stringify(contractAddresses, null, 2));
+  
+  console.log("\n🎉 === DEPLOYMENT SUCCESSFUL === 🎉");
+  console.log("✅ Contract addresses saved to:", addressesFile);
+  console.log("✅ Frontend will automatically use new addresses!");
+  
+  console.log("\n📋 Contract Addresses:");
+  console.log("- NFT Contract:", nftAddress);
+  console.log("- Marketplace Contract:", marketplaceAddress);
+  console.log("- EvolvingNFT Contract:", evolvingNFTAddress);
+  console.log("- Admin Wallet:", deployer.address);
+  console.log("- Deployed At:", new Date().toISOString());
 }
 
 main().catch((error) => {

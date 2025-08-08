@@ -386,6 +386,12 @@ export class Web3Service {
           };
           
           console.log('🔄 Parsed listing data:', listingData); // Debug log
+          console.log('🔍 Contract address check:', {
+            nftContract: listingData.nftContract,
+            EVOLVING_NFT_CONTRACT_ADDRESS: EVOLVING_NFT_CONTRACT_ADDRESS,
+            NFT_CONTRACT_ADDRESS: NFT_CONTRACT_ADDRESS,
+            isEvolvingNFT: listingData.nftContract.toLowerCase() === EVOLVING_NFT_CONTRACT_ADDRESS.toLowerCase()
+          });
 
           const readOnlyProvider = new ethers.JsonRpcProvider('http://127.0.0.1:8545');
           
@@ -444,16 +450,19 @@ export class Web3Service {
             continue;
           }
 
-          formattedListings.push({
+          const formattedListing = {
             listingId: listingData.listingId.toString(),
             tokenId: listingData.tokenId.toString(),
             price: ethers.formatEther(listingData.price),
             seller: listingData.seller,
-            contractAddress: listingData.nftContract,
+            contractAddress: listingData.nftContract, // Marketplace'ten gelen gerçek contract adresi
             tokenURI,
             name,
             description
-          });
+          };
+          
+          console.log('✅ Final formatted listing:', formattedListing);
+          formattedListings.push(formattedListing);
         } catch (error) {
           console.error(`Listing detayları alınamadı (genel hata):`, error);
         }
@@ -554,9 +563,9 @@ export class Web3Service {
   }
 
   // NFT'yi satışa çıkar
-  async sellNFT(tokenId, price) {
+  async sellNFT(tokenId, price, contractAddress = null) {
     try {
-      console.log('🛍️ [WEB3 SELL DEBUG] Starting sellNFT:', { tokenId, price });
+      console.log('🛍️ [WEB3 SELL DEBUG] Starting sellNFT:', { tokenId, price, contractAddress });
       
       await this.connectToContract();
       
@@ -567,44 +576,64 @@ export class Web3Service {
       const priceInWei = ethers.parseEther(price.toString());
       console.log('🛍️ [WEB3 SELL DEBUG] Price in Wei:', priceInWei.toString());
       
-      // First, approve the marketplace to transfer the NFT
-      // Try EvolvingNFT first, then regular NFT
       let nftContract;
-      let contractAddress;
+      let finalContractAddress;
       let contractType = '';
       
-      try {
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
-        nftContract = new ethers.Contract(EVOLVING_NFT_CONTRACT_ADDRESS, EVOLVING_NFT_ABI, signer);
+      // Contract adresini belirle
+      if (contractAddress) {
+        // Contract address doğrudan verilmiş
+        finalContractAddress = contractAddress;
+        console.log('🛍️ [WEB3 SELL DEBUG] Using provided contract address:', contractAddress);
+      } else {
+        // Contract address verilmemiş, hem normal hem evolving NFT'yi kontrol et
+        console.log('🛍️ [WEB3 SELL DEBUG] No contract address provided, checking both contracts...');
         
-        // Check if this NFT exists in EvolvingNFT contract
-        const owner = await nftContract.ownerOf(tokenId);
-        console.log('🛍️ [WEB3 SELL DEBUG] Found in EvolvingNFT contract, owner:', owner);
-        contractAddress = EVOLVING_NFT_CONTRACT_ADDRESS;
-        contractType = 'EvolvingNFT';
-      } catch (evolvingError) {
-        console.log('🛍️ [WEB3 SELL DEBUG] Not found in EvolvingNFT, trying regular NFT...', evolvingError.message);
-        // If not found in EvolvingNFT, try regular NFT contract
-        nftContract = this.nftContract;
-        contractAddress = NFT_CONTRACT_ADDRESS;
-        contractType = 'RegularNFT';
-        
+        // Önce normal NFT kontratını kontrol et (çünkü çoğunlukla bu kullanılıyor)
         try {
-          const owner = await nftContract.ownerOf(tokenId);
-          console.log('🛍️ [WEB3 SELL DEBUG] Found in Regular NFT contract, owner:', owner);
+          await this.nftContract.ownerOf(tokenId);
+          finalContractAddress = NFT_CONTRACT_ADDRESS;
+          contractType = 'RegularNFT';
+          console.log('🛍️ [WEB3 SELL DEBUG] Found in Regular NFT contract');
         } catch (regularError) {
-          console.error('🛍️ [WEB3 SELL DEBUG] NFT not found in any contract:', regularError.message);
-          throw new Error(`NFT Token ID ${tokenId} hiçbir kontraktta bulunamadı`);
+          console.log('🛍️ [WEB3 SELL DEBUG] Not found in Regular NFT, trying EvolvingNFT...', regularError.message);
+          
+          // Regular NFT'de bulunamadı, EvolvingNFT'yi dene
+          try {
+            await window.ethereum.request({ method: 'eth_requestAccounts' });
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            const evolvingContract = new ethers.Contract(EVOLVING_NFT_CONTRACT_ADDRESS, EVOLVING_NFT_ABI, provider);
+            await evolvingContract.ownerOf(tokenId);
+            finalContractAddress = EVOLVING_NFT_CONTRACT_ADDRESS;
+            contractType = 'EvolvingNFT';
+            console.log('🛍️ [WEB3 SELL DEBUG] Found in EvolvingNFT contract');
+          } catch (evolvingError) {
+            console.error('🛍️ [WEB3 SELL DEBUG] NFT not found in any contract:', evolvingError.message);
+            throw new Error(`NFT Token ID ${tokenId} hiçbir kontraktta bulunamadı`);
+          }
         }
       }
 
-      if (!nftContract) {
-        throw new Error('NFT contract bağlantısı yok');
+      // NFT kontratını ayarla
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      
+      if (finalContractAddress === NFT_CONTRACT_ADDRESS) {
+        nftContract = this.nftContract;
+        contractType = 'RegularNFT';
+      } else if (finalContractAddress === EVOLVING_NFT_CONTRACT_ADDRESS) {
+        nftContract = new ethers.Contract(EVOLVING_NFT_CONTRACT_ADDRESS, EVOLVING_NFT_ABI, signer);
+        contractType = 'EvolvingNFT';
+      } else {
+        throw new Error('Bilinmeyen contract adresi: ' + finalContractAddress);
       }
 
-      console.log('🛍️ [WEB3 SELL DEBUG] Using contract:', { contractType, contractAddress });
+      if (!nftContract) {
+        throw new Error('NFT contract bağlantısı kurulamadı');
+      }
+
+      console.log('🛍️ [WEB3 SELL DEBUG] Using contract:', { contractType, contractAddress: finalContractAddress });
 
       // Approve marketplace
       console.log('🛍️ [WEB3 SELL DEBUG] Approving marketplace...');
@@ -613,9 +642,9 @@ export class Web3Service {
       await approveTx.wait();
       console.log('🛍️ [WEB3 SELL DEBUG] Approval confirmed');
 
-      // List NFT
-      console.log('🛍️ [WEB3 SELL DEBUG] Listing NFT...', { contractAddress, tokenId, priceInWei: priceInWei.toString() });
-      const listTx = await this.marketplaceContract.listNFT(contractAddress, tokenId, priceInWei);
+      // List NFT with correct contract address
+      console.log('🛍️ [WEB3 SELL DEBUG] Listing NFT...', { contractAddress: finalContractAddress, tokenId, priceInWei: priceInWei.toString() });
+      const listTx = await this.marketplaceContract.listNFT(finalContractAddress, tokenId, priceInWei);
       console.log('🛍️ [WEB3 SELL DEBUG] List transaction sent:', listTx.hash);
       const receipt = await listTx.wait();
       console.log('🛍️ [WEB3 SELL DEBUG] List transaction confirmed:', receipt.hash);

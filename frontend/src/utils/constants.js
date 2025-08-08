@@ -1,15 +1,42 @@
 // Contract ABI'leri ve adresler
-export const NFT_CONTRACT_ADDRESS = '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707';
-export const MARKETPLACE_CONTRACT_ADDRESS = '0x0165878A594ca255338adfa4d48449f69242Eb8F';
-export const EVOLVING_NFT_CONTRACT_ADDRESS = "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853";
-export const ADMIN_WALLET_ADDRESS = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266";
+// Deploy edilen kontrat adreslerini import et
+let contractAddresses;
+try {
+  // Node.js environment için dynamic import
+  if (typeof window === 'undefined') {
+    const fs = require('fs');
+    const path = require('path');
+    const addressesPath = path.join(__dirname, 'contractAddresses.json');
+    if (fs.existsSync(addressesPath)) {
+      contractAddresses = JSON.parse(fs.readFileSync(addressesPath, 'utf8'));
+    } else {
+      throw new Error('File not found');
+    }
+  } else {
+    // Browser environment için
+    contractAddresses = require('./contractAddresses.json');
+  }
+} catch (error) {
+  // Eğer JSON dosyası yoksa varsayılan adresleri kullan
+  contractAddresses = {
+    NFT_CONTRACT_ADDRESS: '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707',
+    MARKETPLACE_CONTRACT_ADDRESS: '0x0165878A594ca255338adfa4d48449f69242Eb8F',
+    EVOLVING_NFT_CONTRACT_ADDRESS: "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853",
+    ADMIN_WALLET_ADDRESS: "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+  };
+}
+
+export const NFT_CONTRACT_ADDRESS = contractAddresses.NFT_CONTRACT_ADDRESS;
+export const MARKETPLACE_CONTRACT_ADDRESS = contractAddresses.MARKETPLACE_CONTRACT_ADDRESS;
+export const EVOLVING_NFT_CONTRACT_ADDRESS = contractAddresses.EVOLVING_NFT_CONTRACT_ADDRESS;
+export const ADMIN_WALLET_ADDRESS = contractAddresses.ADMIN_WALLET_ADDRESS;
 
 // Güncel NFT ABI'sini import et
-import newNftAbi from './new-nft-abi.json';
+import newNftAbi from './new-nft-abi.json' with { type: 'json' };
 export const NFT_ABI = newNftAbi;
 
 // Compile edilmiş EvolvingNFT ABI'sini import et
-import evolvingNftArtifacts from './EvolvingNFT.json';
+import evolvingNftArtifacts from './EvolvingNFT.json' with { type: 'json' };
 export const EVOLVING_NFT_ABI = evolvingNftArtifacts.abi;
 
 export const MARKETPLACE_ABI = [

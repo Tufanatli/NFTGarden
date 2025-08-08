@@ -136,4 +136,48 @@ export const getUsernameByWallet = async (walletAddress) => {
   if (!walletAddress) return 'Bilinmeyen Kullanıcı';
   const profile = await getProfileByWallet(walletAddress);
   return profile?.username || `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`;
+};
+
+// Toplulukta paylaşılan profilleri getirir (is_shared = true)
+export const getSharedProfiles = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('is_shared', true)
+      .order('shared_at', { ascending: false }); // En son paylaşılanlar önce
+
+    if (error) {
+      console.error('Paylaşılan profilleri getirme hatası:', error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Beklenmedik paylaşılan profil getirme hatası:', error);
+    return [];
+  }
+};
+
+// Profillerin toplam istatistiklerini getirir
+export const getProfileStats = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('wallet_address, is_shared')
+      .not('wallet_address', 'is', null);
+
+    if (error) {
+      console.error('Profil istatistikleri getirme hatası:', error);
+      return { totalProfiles: 0, sharedProfiles: 0 };
+    }
+
+    const totalProfiles = data?.length || 0;
+    const sharedProfiles = data?.filter(profile => profile.is_shared)?.length || 0;
+
+    return { totalProfiles, sharedProfiles };
+  } catch (error) {
+    console.error('Beklenmedik profil istatistikleri hatası:', error);
+    return { totalProfiles: 0, sharedProfiles: 0 };
+  }
 }; 

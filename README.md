@@ -1,183 +1,129 @@
-# NFT Marketplace
+# NFT Garden — Evolving NFT Marketplace
 
-Bu proje Next.js, Hardhat, Solidity ve Pinata kullanarak geliştirilmiş basit bir NFT marketplace uygulamasıdır.
+A full‑stack web3 application where NFTs grow and evolve through stages over time. Create seed NFTs, water them to progress through 5 evolution stages (Seed → Sprout → Sapling → Bloom → Fruiting), and trade them on a built‑in marketplace. Includes a modern Next.js frontend, robust smart contracts, IPFS (Pinata) integration for metadata, and Supabase profiles.
 
-## 🚀 Özellikler
+## ✨ Features
+- Evolving NFTs with 5 stages, per‑token stage URIs and evolution thresholds
+- Watering and evolve mechanics secured on‑chain
+- Marketplace: list, buy, cancel; 2.5% fee to marketplace owner
+- Standard NFT minting (non‑evolving) with name/description support
+- Admin panel for batch minting evolving NFTs and auto‑listing
+- IPFS/Pinata media + metadata upload
+- Supabase‑backed user profiles and community profiles page
+- 3D isometric garden view (React Three Fiber) to visualize your evolving NFTs
 
-- ✅ MetaMask cüzdan bağlantısı
-- ✅ NFT mint etme
-- ✅ Kendi NFT'lerinizi görüntüleme
-- ✅ NFT'leri satışa çıkarma
-- ✅ Satışa çıkarılan NFT'lerden satın alma
-- ✅ IPFS (Pinata) entegrasyonu
-- ✅ Responsive tasarım
+## 🧱 Architecture
+- Smart Contracts (Hardhat, Solidity, OpenZeppelin)
+  - `NFT.sol`: Simple ERC721 with URI storage, name/description, burn
+  - `Marketplace.sol`: Listings, purchases, cancel; fee split
+  - `EvolvingNFT.sol`: Stage data per token, watering counter, stage thresholds, evolution
+- Frontend (Next.js, React, Tailwind CSS, Ethers v6)
+- Storage: IPFS via Pinata (images + metadata)
+- Profiles: Supabase (public anon key in development; move to env for production)
 
-## 🛠 Teknolojiler
-
-- **Frontend:** Next.js, React, Tailwind CSS
-- **Blockchain:** Hardhat, Solidity, Ethers.js
-- **Storage:** Pinata (IPFS)
-- **Wallet:** MetaMask
-
-## 📦 Kurulum
-
-### 1. Repository'yi klonlayın
-```bash
-git clone <repo-url>
-cd nft-marketplace
+## 📂 Project Structure
+```
+NFTGarden/
+  blockchain/                 # Hardhat workspace
+    contracts/                # NFT, Marketplace, EvolvingNFT
+    scripts/                  # Deploy & helper scripts
+    test/                     # Evolving NFT tests
+  frontend/                   # Next.js app (App Router)
+    src/app/                  # Pages (Home, Mint, My NFTs, Admin, Garden, Profiles)
+    src/components/           # UI & 3D components
+    src/utils/                # Web3, ABIs, services, constants
 ```
 
-### 2. Backend (Blockchain) Kurulumu
-```bash
-cd blockchain
-npm install
+## ⚙️ Prerequisites
+- Node.js 18+ (recommended)
+- npm or yarn
+- MetaMask (browser extension)
+
+## 🔧 Setup
+1) Install dependencies
+```
+cd blockchain && npm install
+cd ../frontend && npm install
 ```
 
-### 3. Frontend Kurulumu
-```bash
-cd frontend
-npm install
+2) Configure Pinata API (for IPFS uploads)
+Create `frontend/.env.local`:
 ```
-
-### 4. Pinata Hesabı Oluşturun
-1. [Pinata Cloud](https://pinata.cloud/) hesabı oluşturun
-2. API anahtarlarınızı alın
-3. `frontend/.env.local` dosyası oluşturun:
-
-```env
 NEXT_PUBLIC_PINATA_API_KEY=your_pinata_api_key
-NEXT_PUBLIC_PINATA_SECRET_KEY=your_pinata_secret_key  
+NEXT_PUBLIC_PINATA_SECRET_KEY=your_pinata_secret_key
 NEXT_PUBLIC_PINATA_JWT=your_pinata_jwt_token
 ```
 
-## 🔧 Çalıştırma
+3) (Optional) Configure Supabase
+- Current demo uses a hardcoded anon key in `frontend/src/utils/supabaseClient.js`. For production, move URL/key to environment variables.
 
-### 1. Hardhat Lokal Ağını Başlatın
-```bash
+## 🚀 Local Development
+1) Start Hardhat local node
+```
 cd blockchain
-npx hardhat node
+npm run node
 ```
 
-### 2. Contract'ları Deploy Edin
-Yeni terminal açın:
-```bash
-cd blockchain
-npx hardhat run scripts/deploy.js --network localhost
+2) Compile & Deploy contracts (saves addresses to frontend automatically)
 ```
+npm run compile
+npm run deploy
+```
+The deploy script writes addresses to `frontend/src/utils/contractAddresses.json`, which the frontend reads at runtime.
 
-### 3. Contract Adreslerini Güncelleyin
-Deploy sonrası çıkan adresleri `frontend/src/utils/constants.js` dosyasında güncelleyin.
-
-### 4. Frontend'i Başlatın
-```bash
-cd frontend
+3) Start the frontend
+```
+cd ../frontend
 npm run dev
 ```
+Open http://localhost:3000 and connect MetaMask (Hardhat network).
 
-Uygulama `http://localhost:3000` adresinde çalışacaktır.
-
-## 🦊 MetaMask Kurulumu
-
-1. [MetaMask](https://metamask.io/) browser extension'ını yükleyin
-2. Hardhat lokal ağını MetaMask'a ekleyin:
-   - Network Name: Hardhat Local
-   - RPC URL: http://127.0.0.1:8545
-   - Chain ID: 31337
-   - Currency Symbol: ETH
-
-3. Hardhat'in verdiği test hesaplarından birini MetaMask'a import edin
-
-## 📱 Kullanım
-
-### NFT Mint Etme
-1. "NFT Mint Et" sayfasına gidin
-2. Resim yükleyin
-3. NFT adı ve açıklamasını girin
-4. "NFT Mint Et" butonuna tıklayın
-
-### NFT Satışa Çıkarma
-1. "NFT'lerim" sayfasına gidin
-2. Satmak istediğiniz NFT'de "Satışa Çıkar" butonuna tıklayın
-3. Fiyat belirleyin ve onaylayın
-
-### NFT Satın Alma
-1. Ana sayfada satışa çıkarılan NFT'leri görüntüleyin
-2. Beğendiğiniz NFT'de "Satın Al" butonuna tıklayın
-3. İşlemi onaylayın
-
-## 🏗 Proje Yapısı
-
+## 🧪 Running Tests
 ```
-nft-marketplace/
-├── blockchain/
-│   ├── contracts/
-│   │   ├── NFT.sol
-│   │   └── Marketplace.sol
-│   ├── scripts/
-│   │   └── deploy.js
-│   └── hardhat.config.js
-└── frontend/
-    ├── src/
-    │   ├── app/
-    │   │   ├── page.js          # Ana sayfa
-    │   │   ├── mint/page.js     # NFT mint sayfası
-    │   │   └── my-nfts/page.js  # Kullanıcı NFT'leri
-    │   ├── components/
-    │   │   ├── Navbar.js
-    │   │   └── NFTCard.js
-    │   └── utils/
-    │       ├── constants.js     # Contract ABI'leri
-    │       ├── web3.js         # Blockchain etkileşimi
-    │       └── pinata.js       # IPFS işlemleri
-    └── package.json
+cd blockchain
+npm run test
 ```
+Notes:
+- `EvolvingNFT` includes a watering cooldown check. In this repo, `WATERING_COOLDOWN` is currently set to `0` for easier local testing. If you enable a non‑zero cooldown, adjust tests accordingly.
 
-## 🔧 Smart Contract Detayları
+## 🕹️ How to Use
+- Home (Marketplace): Browse active listings, filter/sort, and purchase
+- Mint: Create standard NFTs with image/name/description (IPFS upload)
+- My NFTs: View your owned NFTs (standard + evolving), list them, cancel listings, transfer
+- Admin: Batch mint evolving NFTs, set per‑stage URIs and thresholds, auto‑list
+- Garden: Water and evolve your EvolvingNFTs, visualize progress in 2D/3D
+- Profiles: View shared community profiles (Supabase)
 
-### NFT Contract
-- ERC721 standardında NFT oluşturma
-- Metadata ve açıklama desteği
-- Token sahibi sorgulamaları
+## 📜 Smart Contracts Overview
+- `NFT.sol`
+  - `mint(tokenURI, name, description)`
+  - `burnNFT(tokenId)`
+  - `getTokensByOwner(owner)` and metadata getters
+- `Marketplace.sol`
+  - `listNFT(nftContract, tokenId, price)`
+  - `buyNFT(listingId)` (payable)
+  - `cancelListing(listingId)`
+  - `getActiveListings()`, `getListingsByUser(user)`
+- `EvolvingNFT.sol`
+  - `mintNFT(recipient, initialSeedURI)`
+  - `setStageDetails(tokenId, stage, uri, threshold)` (or `batchSetStageDetails`)
+  - `water(tokenId)`, `evolve(tokenId)`
+  - `getNFTDetails(tokenId)` returns current stage, watering count, thresholds, URIs, and evolve readiness
 
-### Marketplace Contract
-- NFT listeleme sistemi
-- Güvenli satın alma işlemleri
-- %2.5 marketplace komisyonu
-- Listing iptal etme
+## 🧩 Scripts
+From `blockchain/package.json`:
+- `npm run compile` → `npx hardhat compile`
+- `npm run node` → `npx hardhat node`
+- `npm run deploy` → `npx hardhat run scripts/deploy.js --network localhost`
 
-## 🚨 Güvenlik Notları
+Helper scripts:
+- `scripts/list-seeds.js` (example for minting & listing seeds) — prefer parsing `Transfer` events for token IDs instead of reading private counters.
 
-- Bu proje eğitim amaçlıdır
-- Production kullanımı için ek güvenlik önlemleri alın
-- Private key'lerinizi asla paylaşmayın
-- Test ağında çalıştırın
+## 🔐 Security & Notes
+- Demo project; review and harden before production
+- Store keys (Pinata, Supabase) in environment variables
+- Validate/limit on‑chain approvals (Marketplace uses approval/approvalForAll semantics)
+- If you change evolution cooldowns/thresholds, align UI/UX and tests
 
-## 🤝 Katkı
-
-1. Fork yapın
-2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
-3. Commit yapın (`git commit -m 'Add amazing feature'`)
-4. Push yapın (`git push origin feature/amazing-feature`)
-5. Pull Request açın
-
-## 📄 Lisans
-
-Bu proje MIT lisansı altında lisanslanmıştır.
-
-## ❓ Sorun Giderme
-
-### MetaMask bağlanmıyor
-- MetaMask'ın Hardhat ağında olduğundan emin olun
-- Sayfayı yenileyin ve tekrar deneyin
-
-### Contract bulunamıyor
-- Contract adreslerinin doğru olduğundan emin olun
-- Hardhat node'unun çalıştığından emin olun
-
-### IPFS yükleme başarısız
-- Pinata API anahtarlarınızı kontrol edin
-- İnternet bağlantınızı kontrol edin
-
-## 🆘 Destek
-
-Sorularınız için GitHub Issues kullanabilirsiniz. 
+## 📄 License
+MIT 
